@@ -9,7 +9,6 @@ import copy
 class MSDTrainDataset(Dataset):
 
     def __init__(self, train_lst, patch_size, phase, flip):
-        self.coords = dict()
         with open(train_lst, 'r') as f:
             self.train_lst = [line.strip() for line in f]
         print("Processing {} datas".format(len(self.train_lst)))
@@ -17,6 +16,9 @@ class MSDTrainDataset(Dataset):
         self.flip = flip
         self.phase = phase
         self.data_lst = dict()
+        self.coords = dict()
+        self.coords['idx'] = []
+        self.coords['loc'] = []
 
         for idx in range(len(self.train_lst)):
             ith_info = self.train_lst[idx].split(" ")

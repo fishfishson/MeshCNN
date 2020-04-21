@@ -32,7 +32,6 @@ def train(dataset, data_loader, model, optimizer, scheduler, total_epochs, save_
         scheduler.step()
         log.info('lr = {}'.format(scheduler.get_lr()))
 
-        dataset.train_sample(sets.sample_number)
         for batch_id, batch_data in enumerate(data_loader):
             # getting data batch
             batch_id_sp = epoch * batches_per_epoch
@@ -72,10 +71,10 @@ def train(dataset, data_loader, model, optimizer, scheduler, total_epochs, save_
                         'optimizer': optimizer.state_dict()},
                         model_save_path)
 
-    print('Finished training')
-    if sets.ci_test:
-        exit()
+        dataset.train_sample(sets.sample_number)
 
+    print('Finished training')
+    
 
 if __name__ == '__main__':
     # settting
@@ -85,6 +84,7 @@ if __name__ == '__main__':
     torch.manual_seed(sets.manual_seed)
     model, parameters = generate_model(sets)
     print(model)
+
     # optimizer
     params = [
         {'params': parameters['base_parameters'], 'lr': sets.learning_rate},
@@ -110,9 +110,11 @@ if __name__ == '__main__':
     else:
         sets.pin_memory = True
     training_dataset = MSDTrainDataset(sets.train_list, [128, 128, 32], sets.phase, False)
+    training_dataset.train_sample(sets.sample_number)
     data_loader = DataLoader(training_dataset, batch_size=sets.batch_size, shuffle=True, num_workers=sets.num_workers,
                              pin_memory=sets.pin_memory)
 
     # training
-    train(training_dataset, data_loader, model, optimizer, scheduler, total_epochs=sets.n_epochs, save_interval=sets.save_intervals,
+    train(training_dataset, data_loader, model, optimizer, scheduler, total_epochs=sets.n_epochs,
+          save_interval=sets.save_intervals,
           save_folder=sets.save_folder, sets=sets)
