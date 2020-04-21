@@ -37,7 +37,7 @@ def train(dataset, data_loader, model, optimizer, scheduler, total_epochs, save_
 
         log.info('lr = {}'.format(scheduler.get_lr()))
 
-        dice = diceEval(sets.classes)
+        dice = diceEval(sets.n_seg_classes)
         meter.reset()
 
         for batch_id, batch_data in enumerate(data_loader):
