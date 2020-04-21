@@ -26,11 +26,13 @@ def parse_opts():
     parser.add_argument(
         '--patch_size',
         default=[128, 128, 32],
+        type=list,
         help='Size of patches'
     )
     parser.add_argument(
         '--sample_number',
         default=1000,
+        type=int,
         help='Number of patches for each image'
     )
     parser.add_argument(
