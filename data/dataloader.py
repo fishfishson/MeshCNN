@@ -24,9 +24,9 @@ class MSDTrainDataset(Dataset):
             label_name = os.path.join(ith_info[1])
             assert os.path.isfile(img_name)
             assert os.path.isfile(label_name)
-            img = nib.load(img_name)  # We have transposed the data from WHD format to DHW
+            img = nib.load(img_name).get_fdate()  # We have transposed the data from WHD format to DHW
             assert img is not None
-            mask = nib.load(label_name)
+            mask = nib.load(label_name).get_fdata()
             assert mask is not None
 
             # img = np.transpose(img, (2, 0, 1))
@@ -51,8 +51,8 @@ class MSDTrainDataset(Dataset):
             # label = np.transpose(label, (2, 0, 1))
 
             self.data_lst[idx] = {}
-            self.data_lst[idx]['image'] = img.get_fdata()
-            self.data_lst[idx]['mask'] = mask.get_fdata()
+            self.data_lst[idx]['image'] = img
+            self.data_lst[idx]['mask'] = mask
 
     def train_sample(self, num_patch):
         pz, py, px = self.patch_size
