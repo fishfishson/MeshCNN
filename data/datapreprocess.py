@@ -122,4 +122,3 @@ def pipe(root):
     np.savetxt('/home/zyuaq/mesh/MeshCNN/datasets/test_list.txt', test_list, fmt='%s')
 
 
-pipe('/home/zyuaq/mesh/data/MSD')
