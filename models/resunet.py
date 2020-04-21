@@ -334,7 +334,7 @@ class DANetHead(nn.Module):
 
 class DAResNet3d(nn.Module):
 
-    def __init__(self, segClasses=2, k=16):
+    def __init__(self, classes=2, k=16):
         super(DAResNet3d, self).__init__()
 
         self.layer0 = nn.Sequential(OrderedDict([
@@ -379,7 +379,7 @@ class DAResNet3d(nn.Module):
 
         self.class1 = nn.Sequential(
             CBR(k + 2 * k, 2 * k),
-            nn.Conv3d(2 * k, segClasses + 1, kernel_size=1, bias=False),
+            nn.Conv3d(2 * k, classes, kernel_size=1, bias=False),
         )
 
     def forward(self, x):
@@ -411,7 +411,7 @@ class DAResNet3d(nn.Module):
 
 class DAResUNet(nn.Module):
 
-    def __init__(self, segClasses=2, k=16, psp=True):
+    def __init__(self, segClasses=2, k=16):
 
         super(DAResUNet, self).__init__()
 

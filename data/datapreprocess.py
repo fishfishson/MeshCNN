@@ -98,7 +98,6 @@ def get_processed_list(root='', task='Heart'):
 
 def split_list(root, proj_data_dir):
     img_list, gt_list, surf_list = get_processed_list(root)
-    print(img_list)
     n = len(img_list)
     n_train = int(0.8 * n)
 

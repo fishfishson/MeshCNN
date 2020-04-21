@@ -1,6 +1,6 @@
 from setting import parse_opts
 from data.dataloader import MSDTrainDataset
-from model import generate_model
+from models.resunet import DAResNet3d
 import torch
 from torch import optim
 from torch.utils.data import DataLoader
@@ -86,15 +86,20 @@ if __name__ == '__main__':
 
     # getting model
     torch.manual_seed(sets.manual_seed)
-    model, parameters = generate_model(sets)
+    model = DAResNet3d()
     print(model)
 
     # optimizer
-    params = [
-        {'params': parameters['base_parameters'], 'lr': sets.learning_rate},
-        {'params': parameters['new_parameters'], 'lr': sets.learning_rate * 100}
-    ]
-    optimizer = torch.optim.SGD(params, momentum=0.9, weight_decay=1e-3)
+    # params = [
+    #     {'params': parameters['base_parameters'], 'lr': sets.learning_rate},
+    #     {'params': parameters['new_parameters'], 'lr': sets.learning_rate * 100}
+    # ]
+    # optimizer = torch.optim.SGD(model.parameters(), lr=sets.learning_rate, momentum=0.9, weight_decay=1e-3)
+    optimizer = torch.optim.Adam(model.parameters(),
+                                 lr=sets.learning_rate,
+                                 betas=(0.9, 0.999),
+                                 eps=1e-8,
+                                 weight_decay=0.001)
     scheduler = optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.99)
 
     # train from resume
@@ -113,7 +118,7 @@ if __name__ == '__main__':
         sets.pin_memory = False
     else:
         sets.pin_memory = True
-    training_dataset = MSDTrainDataset(sets.train_list, [128, 128, 32], sets.phase, False)
+    training_dataset = MSDTrainDataset(sets.train_list, sets.patch_size, sets.phase)
     training_dataset.train_sample(sets.sample_number)
     data_loader = DataLoader(training_dataset, batch_size=sets.batch_size, shuffle=True, num_workers=sets.num_workers,
                              pin_memory=sets.pin_memory)

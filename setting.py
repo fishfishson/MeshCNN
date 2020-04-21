@@ -25,7 +25,7 @@ def parse_opts():
     )
     parser.add_argument(
         '--patch_size',
-        default=[32, 128, 128],
+        default=[64, 128, 128],
         type=list,
         help='Size of patches'
     )
