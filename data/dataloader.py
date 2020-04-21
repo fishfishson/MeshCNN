@@ -24,7 +24,7 @@ class MSDTrainDataset(Dataset):
             label_name = os.path.join(ith_info[1])
             assert os.path.isfile(img_name)
             assert os.path.isfile(label_name)
-            img = nib.load(img_name).get_fdate()  # We have transposed the data from WHD format to DHW
+            img = nib.load(img_name).get_fdata()  # We have transposed the data from WHD format to DHW
             assert img is not None
             mask = nib.load(label_name).get_fdata()
             assert mask is not None
