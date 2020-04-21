@@ -6,7 +6,8 @@ from models.resunet import DAResNet3d
 
 def generate_model(opt):
     assert opt.model in [
-        'resnet'
+        'resnet',
+        'daresnet3d'
     ]
 
     if opt.model == 'resnet':
