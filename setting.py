@@ -31,13 +31,13 @@ def parse_opts():
     )
     parser.add_argument(
         '--sample_number',
-        default=1,
+        default=1000,
         type=int,
         help='Number of patches for each image'
     )
     parser.add_argument(
         '--learning_rate',  # set to 0.001 when finetune
-        default=0.0001,
+        default=0.001,
         type=float,
         help=
         'Initial learning rate (divided by 10 while training by lr scheduler)')
@@ -47,7 +47,7 @@ def parse_opts():
         type=int,
         help='Number of jobs')
     parser.add_argument(
-        '--batch_size', default=4, type=int, help='Batch Size')
+        '--batch_size', default=8, type=int, help='Batch Size')
     parser.add_argument(
         '--phase', default='train', type=str, help='Phase of train or test')
     parser.add_argument(
@@ -57,12 +57,12 @@ def parse_opts():
         help='Interation for saving model')
     parser.add_argument(
         '--n_epochs',
-        default=20,
+        default=1000,
         type=int,
         help='Number of total epochs to run')
     parser.add_argument(
         '--resume_path',
-        default='./trails/models/daresnet3d_18_epoch_10_batch_0.pth.tar',
+        default='',
         type=str,
         help=
         'Path for resume model.'
