@@ -24,6 +24,16 @@ def parse_opts():
         help="Number of segmentation classes"
     )
     parser.add_argument(
+        'patch_szie',
+        default=[128, 128, 32],
+        help='Size of patches'
+    )
+    parser.add_argument(
+        'sample_number',
+        default=1000,
+        help='Number of patches for each image'
+    )
+    parser.add_argument(
         '--learning_rate',  # set to 0.001 when finetune
         default=0.0001,
         type=float,

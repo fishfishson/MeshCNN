@@ -80,31 +80,16 @@ def train(dataset, data_loader, model, optimizer, scheduler, total_epochs, save_
 if __name__ == '__main__':
     # settting
     sets = parse_opts()
-    if sets.ci_test:
-        sets.train_list = './toy_data/test_ci.txt'
-        sets.n_epochs = 1
-        sets.no_cuda = True
-        sets.data_root = './toy_data'
-        sets.pretrain_path = ''
-        sets.num_workers = 0
-        sets.model_depth = 10
-        sets.resnet_shortcut = 'A'
-        sets.input_D = 14
-        sets.input_H = 28
-        sets.input_W = 28
 
     # getting model
     torch.manual_seed(sets.manual_seed)
     model, parameters = generate_model(sets)
     print(model)
     # optimizer
-    if sets.ci_test:
-        params = [{'params': parameters, 'lr': sets.learning_rate}]
-    else:
-        params = [
-            {'params': parameters['base_parameters'], 'lr': sets.learning_rate},
-            {'params': parameters['new_parameters'], 'lr': sets.learning_rate * 100}
-        ]
+    params = [
+        {'params': parameters['base_parameters'], 'lr': sets.learning_rate},
+        {'params': parameters['new_parameters'], 'lr': sets.learning_rate * 100}
+    ]
     optimizer = torch.optim.SGD(params, momentum=0.9, weight_decay=1e-3)
     scheduler = optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.99)
 
