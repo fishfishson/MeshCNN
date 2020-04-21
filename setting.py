@@ -69,7 +69,7 @@ def parse_opts():
     )
     parser.add_argument(
         '--pretrain_path',
-        default='pretrain/resnet_18_23dataset.pth',
+        default='',
         type=str,
         help=
         'Path for pretrained model.'
@@ -91,9 +91,9 @@ def parse_opts():
         help='Gpu id lists')
     parser.add_argument(
         '--model',
-        default='resnet',
+        default='daresnet3d',
         type=str,
-        help='(resnet | preresnet | wideresnet | resnext | densenet | ')
+        help='(resnet | preresnet | wideresnet | resnext | densenet | daresnet3d')
     parser.add_argument(
         '--model_depth',
         default=18,
@@ -106,6 +106,12 @@ def parse_opts():
         help='Shortcut type of resnet (A | B)')
     parser.add_argument(
         '--manual_seed', default=1, type=int, help='Manually set random seed')
+    parser.add_argument(
+        '--loss',
+        default='diceplusce',
+        type=str,
+        help='Loss function'
+    )
     args = parser.parse_args()
     args.save_folder = "./trails/models/{}_{}".format(args.model, args.model_depth)
     

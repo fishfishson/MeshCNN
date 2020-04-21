@@ -1,7 +1,8 @@
 from setting import parse_opts
 from data.dataloader import MSDTrainDataset
-from models.resunet import DAResNet3d
+from model import generate_model
 import torch
+from torch import nn
 from torch import optim
 from torch.utils.data import DataLoader
 import time
@@ -19,10 +20,12 @@ def train(dataset, data_loader, model, optimizer, scheduler, total_epochs, save_
     print(sets)
     print("\n\n")
 
-    criterion = DiceLoss()
+    loss1 = DiceLoss()
+    loss2 = nn.CrossEntropyLoss(ignore_index=-1)
 
     if not sets.no_cuda:
-        criterion = criterion.cuda()
+        loss1 = loss1.cuda()
+        loss2 = loss2.cuda()
 
     model.train()
     train_time_sp = time.time()
@@ -35,7 +38,6 @@ def train(dataset, data_loader, model, optimizer, scheduler, total_epochs, save_
             # getting data batch
             batch_id_sp = epoch * batches_per_epoch
             volumes, label_masks, idx_i, loc_i = batch_data
-            print(volumes.size(), label_masks.size())
 
             if not sets.no_cuda:
                 volumes = volumes.cuda()
@@ -47,7 +49,7 @@ def train(dataset, data_loader, model, optimizer, scheduler, total_epochs, save_
             exit(0)
 
             # calculating loss
-            loss = criterion(out_masks, label_masks)
+            loss = loss1(out_masks, label_masks) + 0.5 * loss2(out_masks, label_masks)
             loss.backward()
             optimizer.step()
 
@@ -86,20 +88,15 @@ if __name__ == '__main__':
 
     # getting model
     torch.manual_seed(sets.manual_seed)
-    model = DAResNet3d()
+    model, parameters = generate_model(sets)
     print(model)
 
     # optimizer
-    # params = [
-    #     {'params': parameters['base_parameters'], 'lr': sets.learning_rate},
-    #     {'params': parameters['new_parameters'], 'lr': sets.learning_rate * 100}
-    # ]
-    # optimizer = torch.optim.SGD(model.parameters(), lr=sets.learning_rate, momentum=0.9, weight_decay=1e-3)
-    optimizer = torch.optim.Adam(model.parameters(),
-                                 lr=sets.learning_rate,
-                                 betas=(0.9, 0.999),
-                                 eps=1e-8,
-                                 weight_decay=0.001)
+    params = [
+        {'params': parameters['base_parameters'], 'lr': sets.learning_rate},
+        {'params': parameters['new_parameters'], 'lr': sets.learning_rate * 100}
+    ]
+    optimizer = torch.optim.SGD(params, momentum=0.9, weight_decay=1e-3)
     scheduler = optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.99)
 
     # train from resume
