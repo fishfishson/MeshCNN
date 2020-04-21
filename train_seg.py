@@ -13,6 +13,14 @@ from metrics.DiceEval import diceEval, AverageMeter
 
 
 def train(dataset, data_loader, model, optimizer, scheduler, total_epochs, save_interval, save_folder, sets):
+    # validation
+    val_dataset = MSDTrainDataset(sets.test_list, sets.patch_size, sets.sample_number, phase='val')
+    val_dataloader = DataLoader(val_dataset,
+                                batch_size=sets.batch_size,
+                                shuffle=True,
+                                num_workers=sets.num_workers,
+                                pin_memory=sets.pin_memory)
+
     # settings
     batches_per_epoch = len(data_loader)
     log.info('{} epochs in total, {} batches per epoch'.format(total_epochs, batches_per_epoch))
@@ -28,16 +36,20 @@ def train(dataset, data_loader, model, optimizer, scheduler, total_epochs, save_
         loss1 = loss1.cuda()
         loss2 = loss2.cuda()
 
-    model.train()
     train_time_sp = time.time()
     meter = AverageMeter()
+    dice = diceEval(sets.n_seg_classes)
+    val_dice = diceEval(sets.n_seg_classes)
 
     for epoch in range(total_epochs):
+        model.train()
+
         log.info('Start epoch {}'.format(epoch))
 
         log.info('lr = {}'.format(scheduler.get_lr()))
 
-        dice = diceEval(sets.n_seg_classes)
+        dice.reset()
+        val_dice.reset()
         meter.reset()
 
         for batch_id, batch_data in enumerate(data_loader):
@@ -87,7 +99,23 @@ def train(dataset, data_loader, model, optimizer, scheduler, total_epochs, save_
                     model_save_path)
 
         # update patches
-        dataset.train_sample(sets.sample_number)
+        dataset.patch_sample()
+
+        # eval
+        model.eval()
+        with torch.no_grad():
+            for val_batch_id, val_batch_data in enumerate(val_dataloader):
+                val_volumes, val_label_masks, val_idx_i, val_loc_i = val_batch_data
+                val_label_masks = val_label_masks.long()
+
+                if not sets.no_cuda:
+                    val_volumes = val_volumes.cuda()
+                    val_label_masks = val_label_masks.cuda()
+
+                val_out_masks = model(val_volumes)
+                val_dice.addBatch(val_out_masks, val_label_masks)
+
+            log.info('Epoch {}: val dice = {:.3f}'.format(epoch, dice.getMetric()))
 
     print('Finished training')
 
@@ -125,9 +153,12 @@ if __name__ == '__main__':
         sets.pin_memory = False
     else:
         sets.pin_memory = True
-    training_dataset = MSDTrainDataset(sets.train_list, sets.patch_size, sets.phase, flip=False)
-    training_dataset.train_sample(sets.sample_number)
-    data_loader = DataLoader(training_dataset, batch_size=sets.batch_size, shuffle=True, num_workers=sets.num_workers,
+    training_dataset = MSDTrainDataset(sets.train_list, sets.patch_size, sets.sample_number, sets.phase, flip=False)
+    training_dataset.patch_sample()
+    data_loader = DataLoader(training_dataset,
+                             batch_size=sets.batch_size,
+                             shuffle=True,
+                             num_workers=sets.num_workers,
                              pin_memory=sets.pin_memory)
 
     # training

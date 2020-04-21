@@ -8,11 +8,13 @@ import copy
 
 class MSDTrainDataset(Dataset):
 
-    def __init__(self, train_lst, patch_size, phase, flip):
-        with open(train_lst, 'r') as f:
-            self.train_lst = [line.strip() for line in f]
-        print("Processing {} datas".format(len(self.train_lst)))
+    def __init__(self, file_lst, patch_size, patch_number, phase, flip=False):
+        with open(file_lst, 'r') as f:
+            self.file_lst = [line.strip() for line in f]
+
+        print("Processing {} datas".format(len(self.file_lst)))
         self.patch_size = patch_size
+        self.patch_number = patch_number
         self.flip = flip
         self.phase = phase
         self.data_lst = dict()
@@ -20,8 +22,8 @@ class MSDTrainDataset(Dataset):
         self.coords['idx'] = []
         self.coords['loc'] = []
 
-        for idx in range(len(self.train_lst)):
-            ith_info = self.train_lst[idx].split(" ")
+        for idx in range(len(self.file_lst)):
+            ith_info = self.file_lst[idx].split(" ")
             img_name = os.path.join(ith_info[0])
             label_name = os.path.join(ith_info[1])
 
@@ -43,62 +45,45 @@ class MSDTrainDataset(Dataset):
                 scale = np.random.rand(img.shape[0], img.shape[1], img.shape[2]) * 0.2 - 0.1 + 1  # [0.9, 1.1]
                 img = img * scale
 
-            if self.phase == 'validate':
-                print('Wrong')
-                exit(0)
-
-            # if self.phase == 'validate':
-            #    img = np.pad(img, ((0, self.patch_size[0]//2+1),
-            #                       (0, self.patch_size[1]//2+1),
-            #                       (0, self.patch_size[2]//2+1)), 'constant', constant_values=(0))
-
-            # label = np.transpose(label, (2, 0, 1))
-
             self.data_lst[idx] = {}
             self.data_lst[idx]['image'] = img
             self.data_lst[idx]['mask'] = mask
 
-    def train_sample(self, num_patch):
+    def patch_sample(self):
         pz, py, px = self.patch_size
         self.coords['idx'] = []
         self.coords['loc'] = []
 
-        for i in range(len(self.train_lst)):
+        for i in range(len(self.file_lst)):
             img_shape = self.data_lst[i]['image'].shape
-            count = 0
-            while count < num_patch:
-                x0, y0, z0 = np.random.randint(0, (img_shape[0] - pz,
-                                                   img_shape[1] - py,
-                                                   img_shape[2] - px), 3)
-                self.coords['idx'].append(i)
-                self.coords['loc'].append([x0, y0, z0])
-                count += 1
 
-    #     def validate_sample(self, subject):
-    #         PX, PY, PZ = self.patch_size
-    #         self.coords = {}
-    #         self.coords['subject'] = []
-    #         self.coords['xyz'] = []
+            assert img_shape[0] - pz > 0
+            assert img_shape[1] - py > 0
+            assert img_shape[2] - px > 0
 
-    #         image_shape = self.data_list[subject]['image'].shape
-    #         mask_shape = self.data_list[subject]['mask'].shape
+            if self.phase == 'train':
+                count = 0
+                while count < self.patch_number:
+                    z0, y0, x0 = np.random.randint(0, (img_shape[0] - pz,
+                                                       img_shape[1] - py,
+                                                       img_shape[2] - px), 3)
+                    self.coords['idx'].append(i)
+                    self.coords['loc'].append([z0, y0, x0])
+                    count += 1
+            else:
+                zs = np.arange(0, img_shape[0] - pz, pz)
+                ys = np.arange(0, img_shape[1] - pz, py)
+                xs = np.arange(0, img_shape[2] - pz, px)
 
-    #         for x0 in range(0, image_shape[0], PX//2):
-    #             for y0 in range(0, image_shape[1], PY//2):
-    #                 for z0 in range(0, image_shape[2], PZ//2):
-    #                     x1 = x0 + PX
-    #                     y1 = y0 + PY
-    #                     z1 = z0 + PZ
-    #                     if x0 < 0 or x1 > image_shape[0]:
-    #                         continue
-    #                     if y0 < 0 or y1 > image_shape[1]:
-    #                         continue
-    #                     if z0 < 0 or z1 > image_shape[2]:
-    #                         continue
-    #                     self.coords['subject'].append(subject)
-    #                     self.coords['xyz'].append([x0, y0, z0])
+                zs = np.append(zs, img_shape[0] - pz)
+                ys = np.append(ys, img_shape[0] - py)
+                xs = np.append(xs, img_shape[0] - px)
 
-    #         return mask_shape
+                for z in zs:
+                    for y in ys:
+                        for x in xs:
+                            self.coords['idx'].append(i)
+                            self.coords['loc'].append([z, y, x])
 
     def __getitem__(self, idx):
         idx_i = self.coords['idx'][idx]
@@ -107,26 +92,17 @@ class MSDTrainDataset(Dataset):
         img = self.data_lst[idx_i]['image']
         mask = self.data_lst[idx_i]['mask']
 
-        img_patch = copy.deepcopy(img[loc_i[0]:loc_i[0] + self.patch_size[0],
-                                  loc_i[1]:loc_i[1] + self.patch_size[1],
-                                  loc_i[2]:loc_i[2] + self.patch_size[2]])
-        mask_patch = copy.deepcopy(mask[loc_i[0]:loc_i[0] + self.patch_size[0],
-                                   loc_i[1]:loc_i[1] + self.patch_size[1],
-                                   loc_i[2]:loc_i[2] + self.patch_size[2]])
+        pz, py, px = self.patch_size
 
-        if self.flip:
-            flip_x = np.random.choice(2) * 2 - 1
-            flip_y = np.random.choice(2) * 2 - 1
-            flip_z = np.random.choice(2) * 2 - 1
-            img_patch = img_patch[::flip_z, ::flip_y, ::flip_x]
-            mask_patch = mask_patch[::flip_z, ::flip_y, ::flip_x]
+        img_patch = copy.deepcopy(img[loc_i[0]:loc_i[0] + pz, loc_i[1]:loc_i[1] + py, loc_i[2]:loc_i[2] + px])
+        mask_patch = copy.deepcopy(mask[loc_i[0]:loc_i[0] + pz, loc_i[1]:loc_i[1] + py, loc_i[2]:loc_i[2] + px])
 
         img_patch = img_patch.astype('float32')
         img_patch = img_patch[np.newaxis, :, :, :]
-        mask_patch = mask_patch.astype('float32')
+        mask_patch = mask_patch.astype('int')
 
         img_patch = torch.from_numpy(img_patch).type(torch.FloatTensor)
-        mask_patch = torch.from_numpy(mask_patch).type(torch.FloatTensor)
+        mask_patch = torch.from_numpy(mask_patch).type(torch.LongTensor)
 
         return img_patch, mask_patch, idx_i, loc_i
 

@@ -5,6 +5,7 @@ Written by Whalechen
 
 import argparse
 
+
 def parse_opts():
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -16,7 +17,13 @@ def parse_opts():
         '--train_list',
         default='./datasets/train_list.txt',
         type=str,
-        help='Path for image list file')
+        help='Path to training list file')
+    parser.add_argument(
+        '--test_list',
+        default='./dataset/test_list.txt',
+        type=str,
+        help='Path to validating list file'
+    )
     parser.add_argument(
         '--n_seg_classes',
         default=2,
@@ -76,7 +83,7 @@ def parse_opts():
     )
     parser.add_argument(
         '--new_layer_names',
-        #default=['upsample1', 'cmp_layer3', 'upsample2', 'cmp_layer2', 'upsample3', 'cmp_layer1', 'upsample4', 'cmp_conv1', 'conv_seg'],
+        # default=['upsample1', 'cmp_layer3', 'upsample2', 'cmp_layer2', 'upsample3', 'cmp_layer1', 'upsample4', 'cmp_conv1', 'conv_seg'],
         default=['conv_seg'],
         type=list,
         help='New layer except for backbone')
@@ -87,7 +94,7 @@ def parse_opts():
         '--gpu_id',
         default=[0],
         nargs='+',
-        type=int,              
+        type=int,
         help='Gpu id lists')
     parser.add_argument(
         '--model',
@@ -114,5 +121,5 @@ def parse_opts():
     )
     args = parser.parse_args()
     args.save_folder = "./trails/models/{}_{}".format(args.model, args.model_depth)
-    
+
     return args
