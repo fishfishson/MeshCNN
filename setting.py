@@ -24,12 +24,12 @@ def parse_opts():
         help="Number of segmentation classes"
     )
     parser.add_argument(
-        'patch_szie',
+        '--patch_size',
         default=[128, 128, 32],
         help='Size of patches'
     )
     parser.add_argument(
-        'sample_number',
+        '--sample_number',
         default=1000,
         help='Number of patches for each image'
     )
@@ -103,9 +103,6 @@ def parse_opts():
         help='Shortcut type of resnet (A | B)')
     parser.add_argument(
         '--manual_seed', default=1, type=int, help='Manually set random seed')
-    parser.add_argument(
-        '--ci_test', action='store_true', help='If true, ci testing is used.')
-    parser.set_defaults(ci_test=False)
     args = parser.parse_args()
     args.save_folder = "./trails/models/{}_{}".format(args.model, args.model_depth)
     
