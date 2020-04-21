@@ -98,6 +98,7 @@ def get_processed_list(root='data', task='Heart'):
 
 def pipe(root):
     img_list, gt_list, surf_list = get_processed_list(root)
+    print(img_list)
     n = len(img_list)
     n_train = int(0.8 * n)
 
@@ -117,8 +118,8 @@ def pipe(root):
     train_list = np.vstack([train_img, train_gt, train_surf]).T
     test_list = np.vstack([test_img, test_gt, test_surf]).T
 
-    np.savetxt('~/mesh/MeshCNN/datasets/train_list.txt', train_list)
-    np.savetxt('~/mesh/MeshCNN/datasets/test_list.txt', test_list)
+    np.savetxt('/home/zyuaq/mesh/MeshCNN/datasets/train_list.txt', train_list, fmt='%s')
+    np.savetxt('/home/zyuaq/mesh/MeshCNN/datasets/test_list.txt', test_list, fmt='%s')
 
 
-pipe('~/mesh/data/MSD')
+pipe('/home/zyuaq/mesh/data/MSD')
