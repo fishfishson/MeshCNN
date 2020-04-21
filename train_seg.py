@@ -118,7 +118,7 @@ if __name__ == '__main__':
         sets.pin_memory = False
     else:
         sets.pin_memory = True
-    training_dataset = MSDTrainDataset(sets.train_list, sets.patch_size, sets.phase)
+    training_dataset = MSDTrainDataset(sets.train_list, sets.patch_size, sets.phase, flip=False)
     training_dataset.train_sample(sets.sample_number)
     data_loader = DataLoader(training_dataset, batch_size=sets.batch_size, shuffle=True, num_workers=sets.num_workers,
                              pin_memory=sets.pin_memory)
