@@ -14,7 +14,7 @@ def parse_opts():
         help='Root directory path of data')
     parser.add_argument(
         '--train_list',
-        default='./datasets/train.txt',
+        default='./datasets/train_list.txt',
         type=str,
         help='Path for image list file')
     parser.add_argument(
