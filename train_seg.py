@@ -9,6 +9,7 @@ import time
 from util.logger import log
 import os
 from losses.loss import DiceLoss
+from metrics.DiceEval import diceEval, AverageMeter
 
 
 def train(dataset, data_loader, model, optimizer, scheduler, total_epochs, save_interval, save_folder, sets):
@@ -29,10 +30,15 @@ def train(dataset, data_loader, model, optimizer, scheduler, total_epochs, save_
 
     model.train()
     train_time_sp = time.time()
+    meter = AverageMeter()
+
     for epoch in range(total_epochs):
         log.info('Start epoch {}'.format(epoch))
 
         log.info('lr = {}'.format(scheduler.get_lr()))
+
+        dice = diceEval(sets.classes)
+        meter.reset()
 
         for batch_id, batch_data in enumerate(data_loader):
             # getting data batch
@@ -47,18 +53,22 @@ def train(dataset, data_loader, model, optimizer, scheduler, total_epochs, save_
             optimizer.zero_grad()
             out_masks = model(volumes)
 
-            # calculating loss
+            # calculating loss and update optimizer
             loss = loss1(out_masks, label_masks) + 0.5 * loss2(out_masks, label_masks)
             loss.backward()
             optimizer.step()
 
+            # update scheduler
             scheduler.step()
+
+            # update meter
+            meter.update(loss.item())
+            dice.addBatch(out_masks.max(1)[1], label_masks)
 
             avg_batch_time = (time.time() - train_time_sp) / (1 + batch_id_sp)
             log.info(
-                'Batch: {}-{} ({}), loss = {:.3f}, loss_seg = {:.3f}, avg_batch_time = {:.3f}' \
-                    .format(epoch, batch_id, batch_id_sp, loss.item(), loss.item(), avg_batch_time))
-
+                'Batch: {}-{} ({}), loss = {:.3f}, dice = {:.3f}, avg_batch_time = {:.3f}' \
+                    .format(epoch, bnatch_id, batch_id_sp, meter.avg, dice.getMetric(), avg_batch_time))
 
             # save model
             if batch_id == 0 and batch_id_sp != 0 and batch_id_sp % save_interval == 0:
@@ -76,6 +86,7 @@ def train(dataset, data_loader, model, optimizer, scheduler, total_epochs, save_
                     'optimizer': optimizer.state_dict()},
                     model_save_path)
 
+        # update patches
         dataset.train_sample(sets.sample_number)
 
     print('Finished training')
