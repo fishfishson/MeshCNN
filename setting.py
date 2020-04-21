@@ -69,7 +69,7 @@ def parse_opts():
     )
     parser.add_argument(
         '--pretrain_path',
-        default='pretrain/resnet_50.pth',
+        default='pretrain/resnet_18_23dataset.pth',
         type=str,
         help=
         'Path for pretrained model.'
