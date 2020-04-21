@@ -62,14 +62,14 @@ def parse_opts():
         help='Number of total epochs to run')
     parser.add_argument(
         '--resume_path',
-        default='',
+        default='./trails/models/daresnet3d_18_epoch_10_batch_0.pth.tar',
         type=str,
         help=
         'Path for resume model.'
     )
     parser.add_argument(
         '--pretrain_path',
-        default='./trails/models/daresnet3d_18_epoch_10_batch_0.pth.tar',
+        default='',
         type=str,
         help=
         'Path for pretrained model.'
