@@ -9,7 +9,7 @@ def parse_opts():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '--data_root',
-        default='./datasets',
+        default='/home/zyuaq/mesh/data/MSD/Heart',
         type=str,
         help='Root directory path of data')
     parser.add_argument(

@@ -29,13 +29,13 @@ def train(dataset, data_loader, model, optimizer, scheduler, total_epochs, save_
     for epoch in range(total_epochs):
         log.info('Start epoch {}'.format(epoch))
 
-        scheduler.step()
         log.info('lr = {}'.format(scheduler.get_lr()))
 
         for batch_id, batch_data in enumerate(data_loader):
             # getting data batch
             batch_id_sp = epoch * batches_per_epoch
             volumes, label_masks, idx_i, loc_i = batch_data
+            print(volumes.size(), label_masks.size())
 
             if not sets.no_cuda:
                 volumes = volumes.cuda()
@@ -43,11 +43,15 @@ def train(dataset, data_loader, model, optimizer, scheduler, total_epochs, save_
 
             optimizer.zero_grad()
             out_masks = model(volumes)
+            print(out_masks.size())
+            exit(0)
 
             # calculating loss
             loss = criterion(out_masks, label_masks)
             loss.backward()
             optimizer.step()
+
+            scheduler.step()
 
             avg_batch_time = (time.time() - train_time_sp) / (1 + batch_id_sp)
             log.info(
