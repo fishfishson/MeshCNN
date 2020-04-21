@@ -59,22 +59,22 @@ def train(dataset, data_loader, model, optimizer, scheduler, total_epochs, save_
                 'Batch: {}-{} ({}), loss = {:.3f}, loss_seg = {:.3f}, avg_batch_time = {:.3f}' \
                     .format(epoch, batch_id, batch_id_sp, loss.item(), loss.item(), avg_batch_time))
 
-            if not sets.ci_test:
-                # save model
-                if batch_id == 0 and batch_id_sp != 0 and batch_id_sp % save_interval == 0:
-                    # if batch_id_sp != 0 and batch_id_sp % save_interval == 0:
-                    model_save_path = '{}_epoch_{}_batch_{}.pth.tar'.format(save_folder, epoch, batch_id)
-                    model_save_dir = os.path.dirname(model_save_path)
-                    if not os.path.exists(model_save_dir):
-                        os.makedirs(model_save_dir)
 
-                    log.info('Save checkpoints: epoch = {}, batch_id = {}'.format(epoch, batch_id))
-                    torch.save({
-                        'ecpoch': epoch,
-                        'batch_id': batch_id,
-                        'state_dict': model.state_dict(),
-                        'optimizer': optimizer.state_dict()},
-                        model_save_path)
+            # save model
+            if batch_id == 0 and batch_id_sp != 0 and batch_id_sp % save_interval == 0:
+                # if batch_id_sp != 0 and batch_id_sp % save_interval == 0:
+                model_save_path = '{}_epoch_{}_batch_{}.pth.tar'.format(save_folder, epoch, batch_id)
+                model_save_dir = os.path.dirname(model_save_path)
+                if not os.path.exists(model_save_dir):
+                    os.makedirs(model_save_dir)
+
+                log.info('Save checkpoints: epoch = {}, batch_id = {}'.format(epoch, batch_id))
+                torch.save({
+                    'ecpoch': epoch,
+                    'batch_id': batch_id,
+                    'state_dict': model.state_dict(),
+                    'optimizer': optimizer.state_dict()},
+                    model_save_path)
 
         dataset.train_sample(sets.sample_number)
 
