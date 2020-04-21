@@ -101,11 +101,11 @@ if __name__ == '__main__':
     model, parameters = generate_model(sets)
 
     # optimizer
-    if sets.phase != 'test' and sets.pretrain_path:
-        params = [
-            {'params': parameters['base_parameters'], 'lr': sets.learning_rate},
-            {'params': parameters['new_parameters'], 'lr': sets.learning_rate * 100}
-        ]
+    # if sets.phase != 'test' and sets.pretrain_path:
+    #     params = [
+    #         {'params': parameters['base_parameters'], 'lr': sets.learning_rate},
+    #         {'params': parameters['new_parameters'], 'lr': sets.learning_rate * 100}
+    #     ]
     optimizer = optim.SGD(parameters, lr=sets.learning_rate, momentum=0.9, weight_decay=1e-3)
     scheduler = optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.99)
 
