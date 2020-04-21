@@ -7,3 +7,5 @@
 checkpoints
 datasets
 runs
+pretrain
+trails
