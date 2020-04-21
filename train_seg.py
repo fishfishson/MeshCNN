@@ -38,6 +38,7 @@ def train(dataset, data_loader, model, optimizer, scheduler, total_epochs, save_
             # getting data batch
             batch_id_sp = epoch * batches_per_epoch
             volumes, label_masks, idx_i, loc_i = batch_data
+            label_masks = label_masks.long()
 
             if not sets.no_cuda:
                 volumes = volumes.cuda()
