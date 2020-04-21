@@ -45,8 +45,6 @@ def train(dataset, data_loader, model, optimizer, scheduler, total_epochs, save_
 
             optimizer.zero_grad()
             out_masks = model(volumes)
-            print(out_masks.size())
-            exit(0)
 
             # calculating loss
             loss = loss1(out_masks, label_masks) + 0.5 * loss2(out_masks, label_masks)
