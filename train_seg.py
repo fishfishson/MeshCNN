@@ -68,7 +68,7 @@ def train(dataset, data_loader, model, optimizer, scheduler, total_epochs, save_
             avg_batch_time = (time.time() - train_time_sp) / (1 + batch_id_sp)
             log.info(
                 'Batch: {}-{} ({}), loss = {:.3f}, dice = {:.3f}, avg_batch_time = {:.3f}' \
-                    .format(epoch, bnatch_id, batch_id_sp, meter.avg, dice.getMetric(), avg_batch_time))
+                    .format(epoch, batch_id, batch_id_sp, meter.avg, dice.getMetric(), avg_batch_time))
 
             # save model
             if batch_id == 0 and batch_id_sp != 0 and batch_id_sp % save_interval == 0:
