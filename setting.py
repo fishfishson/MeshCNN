@@ -85,6 +85,7 @@ def parse_opts():
     parser.set_defaults(no_cuda=False)
     parser.add_argument(
         '--gpu_id',
+        default=0,
         nargs='+',
         type=int,              
         help='Gpu id lists')
