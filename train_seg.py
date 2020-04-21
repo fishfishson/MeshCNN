@@ -80,7 +80,7 @@ def train(dataset, data_loader, model, optimizer, scheduler, total_epochs, save_
 
                 log.info('Save checkpoints: epoch = {}, batch_id = {}'.format(epoch, batch_id))
                 torch.save({
-                    'ecpoch': epoch,
+                    'epoch': epoch,
                     'batch_id': batch_id,
                     'state_dict': model.state_dict(),
                     'optimizer': optimizer.state_dict()},
