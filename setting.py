@@ -69,7 +69,7 @@ def parse_opts():
     )
     parser.add_argument(
         '--pretrain_path',
-        default='',
+        default='./trails/models/daresnet3d_18_epoch_!0_batch_0.pth.tar',
         type=str,
         help=
         'Path for pretrained model.'
