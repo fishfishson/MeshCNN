@@ -62,7 +62,6 @@ class MSDTrainDataset(Dataset):
         self.coords['loc'] = []
 
         for i in range(len(self.train_lst)):
-            print("Processing {}th data".format(i + 1))
             img_shape = self.data_lst[i]['image'].shape
             count = 0
             while count < num_patch:

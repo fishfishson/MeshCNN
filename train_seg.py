@@ -35,7 +35,7 @@ def train(dataset, data_loader, model, optimizer, scheduler, total_epochs, save_
         for batch_id, batch_data in enumerate(data_loader):
             # getting data batch
             batch_id_sp = epoch * batches_per_epoch
-            volumes, label_masks = batch_data
+            volumes, label_masks, idx_i, loc_i = batch_data
 
             if not sets.no_cuda:
                 volumes = volumes.cuda()
@@ -74,7 +74,7 @@ def train(dataset, data_loader, model, optimizer, scheduler, total_epochs, save_
         dataset.train_sample(sets.sample_number)
 
     print('Finished training')
-    
+
 
 if __name__ == '__main__':
     # settting
