@@ -11,6 +11,7 @@ def generate_model(opt):
     ]
 
     if opt.model == 'resnet':
+        print('Use ResNet as backbone')
         assert opt.model_depth in [10, 18, 34, 50, 101, 152, 200]
 
         if opt.model_depth == 10:
@@ -71,6 +72,7 @@ def generate_model(opt):
                 num_seg_classes=opt.n_seg_classes)
 
     if opt.model == 'daresnet3d':
+        print('Use DAResNet3d as backbone')
         model = DAResNet3d()
 
     if not opt.no_cuda:
