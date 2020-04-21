@@ -24,6 +24,7 @@ class MSDTrainDataset(Dataset):
             ith_info = self.train_lst[idx].split(" ")
             img_name = os.path.join(ith_info[0])
             label_name = os.path.join(ith_info[1])
+
             assert os.path.isfile(img_name)
             assert os.path.isfile(label_name)
             img = nib.load(img_name).get_fdata()  # We have transposed the data from WHD format to DHW
@@ -31,7 +32,8 @@ class MSDTrainDataset(Dataset):
             mask = nib.load(label_name).get_fdata()
             assert mask is not None
 
-            # img = np.transpose(img, (2, 0, 1))
+            img = np.transpose(img, (2, 1, 0))
+            mask = np.transpose(mask, (2, 1, 0))
             # img = np.clip(img, -1, 1)
 
             if self.phase == 'train':

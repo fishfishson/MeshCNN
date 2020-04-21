@@ -55,7 +55,7 @@ def normalize(img):
 
 #     return img_
 
-def process_MSD_pipe(root, task='Heart', save=None):
+def process_MSD(root, task='Heart', save=None):
     img_list, gt_list = get_MSD_list(root, task)
     save_dir = os.path.join(root, task)
 
@@ -67,8 +67,8 @@ def process_MSD_pipe(root, task='Heart', save=None):
         gt = ants.image_read(gt_list[i])
 
         # iso-resample
-        img_ = iso_resample(img, [2, 2, 2], islabel=False)
-        gt_ = iso_resample(gt, [2, 2, 2], islabel=True)
+        img_ = iso_resample(img, [1.5, 1.5, 1.5], islabel=False)
+        gt_ = iso_resample(gt, [1.5, 1.5, 1.5], islabel=True)
 
         # normalize
         img_ = normalize(img_)
@@ -83,7 +83,7 @@ def process_MSD_pipe(root, task='Heart', save=None):
         mcubes.export_obj(v, e, os.path.join(save_dir, 'surfs', '{:0>2d}surf.obj'.format(i + 1)))
 
 
-def get_processed_list(root='data', task='Heart'):
+def get_processed_list(root='', task='Heart'):
     img_list = glob.glob(os.path.join(root, task, 'images', '*nii'))
     img_list.sort()
 
@@ -96,7 +96,7 @@ def get_processed_list(root='data', task='Heart'):
     return img_list, gt_list, surf_list
 
 
-def pipe(root):
+def split_list(root, proj_data_dir):
     img_list, gt_list, surf_list = get_processed_list(root)
     print(img_list)
     n = len(img_list)
@@ -118,7 +118,13 @@ def pipe(root):
     train_list = np.vstack([train_img, train_gt, train_surf]).T
     test_list = np.vstack([test_img, test_gt, test_surf]).T
 
-    np.savetxt('/home/zyuaq/mesh/MeshCNN/datasets/train_list.txt', train_list, fmt='%s')
-    np.savetxt('/home/zyuaq/mesh/MeshCNN/datasets/test_list.txt', test_list, fmt='%s')
+    np.savetxt(os.path.join(proj_data_dir, 'train_list.txt'), train_list, fmt='%s')
+    np.savetxt(os.path.join(proj_data_dir, 'test_list.txt'), test_list, fmt='%s')
 
 
+if __name__ == '__main__':
+    root = '/home/zyuaq/mesh/data/MSD'
+    proj_data_dir = '/home/zyuaq/mesh/MeshCNN/datasets/'
+    process_MSD(root)
+    img_list, gt_list, surf_list = get_processed_list(root)
+    split_list(root, proj_data_dir)
