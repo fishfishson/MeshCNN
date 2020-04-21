@@ -9,12 +9,12 @@ def parse_opts():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '--data_root',
-        default='./dataset',
+        default='./datasets',
         type=str,
         help='Root directory path of data')
     parser.add_argument(
         '--train_list',
-        default='./dataset/train.txt',
+        default='./datasets/train.txt',
         type=str,
         help='Path for image list file')
     parser.add_argument(
