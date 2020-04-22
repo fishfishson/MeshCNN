@@ -1,6 +1,5 @@
 import os, glob, re
 import ants
-import time
 import numpy as np
 from tqdm import tqdm
 import mcubes
