@@ -200,19 +200,19 @@ def main():
     temp_mesh = o3d.io.read_triangle_mesh(os.path.join(root, 'temp.obj'))
     temp_pts = np.asarray(temp_mesh.vertices)
 
-    tgt_lst = glob.glob(os.path.join(root, 'surfs_unaligned', '*.obj'))
-    tgt_lst.sort()
-    tgt_lst = tgt_lst[1:]
-    temps_aligned_pts = align_shape(temp_pts, tgt_lst)
-    align_shapes = np.concatenate([temp_pts[np.newaxis,], temps_aligned_pts], axis=0)
-
-    for i in range(align_shapes.shape[0]):
-        temps_aligned_mesh = npcvtobj(temp_mesh, align_shapes[i])
-        o3d.io.write_triangle_mesh(os.path.join(root, 'surfs', '{:0>2d}surf.obj'.format(i + 1)),
-                                   temps_aligned_mesh,
-                                   write_vertex_normals=False,
-                                   write_vertex_colors=False,
-                                   write_triangle_uvs=False)
+    # tgt_lst = glob.glob(os.path.join(root, 'surfs_unaligned', '*.obj'))
+    # tgt_lst.sort()
+    # tgt_lst = tgt_lst[1:]
+    # temps_aligned_pts = align_shape(temp_pts, tgt_lst)
+    # align_shapes = np.concatenate([temp_pts[np.newaxis,], temps_aligned_pts], axis=0)
+    #
+    # for i in range(align_shapes.shape[0]):
+    #     temps_aligned_mesh = npcvtobj(temp_mesh, align_shapes[i])
+    #     o3d.io.write_triangle_mesh(os.path.join(root, 'surfs', '{:0>2d}surf.obj'.format(i + 1)),
+    #                                temps_aligned_mesh,
+    #                                write_vertex_normals=False,
+    #                                write_vertex_colors=False,
+    #                                write_triangle_uvs=False)
 
 
 if __name__ == '__main__':
