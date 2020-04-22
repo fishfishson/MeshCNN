@@ -93,17 +93,17 @@ def surf_preprocess(root, task='Heart2'):
 
     for i in range(temp_aligned_surfs.shape[0]):
         temp_aligned_surf = npcvtobj(temp_mesh, temp_aligned_surfs[i])
-        o3d.io.write_triangle_mesh(os.path.join(root, 'surfs', '{:0>2d}surf.obj'.format(i + 1)),
+        o3d.io.write_triangle_mesh(os.path.join(root, task, 'surfs', '{:0>2d}surf.obj'.format(i + 1)),
                                    temp_aligned_surf,
                                    write_vertex_normals=False,
                                    write_vertex_colors=False,
                                    write_triangle_uvs=False)
     for i in range(temp_aligned_init_surfs.shape[0]):
         temp_aligned_init_surf = npcvtobj(temp_mesh, temp_aligned_init_surfs[i])
-        m = re.match(r'([0-9]*)_([0-9]*)surf_init.obj',os.path.basename(init_surf_list[i]))
+        m = re.match(r'([0-9]*)_([0-9]*)surf_init.obj', os.path.basename(init_surf_list[i]))
         id = m.group(1)
         num = m.group(2)
-        o3d.io.write_triangle_mesh(os.path.join(root, 'surfs', '{}_{}surf_init.obj'.format(id, num)),
+        o3d.io.write_triangle_mesh(os.path.join(root, task, 'surfs', '{}_{}surf_init.obj'.format(id, num)),
                                    temp_aligned_init_surf,
                                    write_vertex_normals=False,
                                    write_vertex_colors=False,
@@ -127,7 +127,7 @@ def get_processed_list(root='', task='Heart'):
     for i in range(len(gt_surf_list)):
         surf_pair = dict()
         surf_pair['gt'] = gt_surf_list[i]
-        surf_id = re.match(r'([0-9]*)surf.obj' ,os.path.basename(surf_list[i])).group(1)
+        surf_id = re.match(r'([0-9]*)surf.obj', os.path.basename(gt_surf_list[i])).group(1)
         corr_init_surfs = []
         for j in range(len(init_surf_list)):
             if init_surf_list[j].startswith(surf_id):
