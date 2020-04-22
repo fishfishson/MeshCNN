@@ -80,9 +80,9 @@ def process_MSD(root, task='Heart2', num_surf=5):
 
 
 def surf_preprocess(root, task='Heart2'):
-    gt_surf_list = glob.glob(os.path.join(root, task, 'surf_unaligned', '*surf.obj'))
+    gt_surf_list = glob.glob(os.path.join(root, task, 'surfs_unaligned', '*surf.obj'))
     gt_surf_list.sort()
-    init_surf_list = glob.glob(os.path.join(root, task, 'surf_unaligned', '*surf_init.obj'))
+    init_surf_list = glob.glob(os.path.join(root, task, 'surfs_unaligned', '*surf_init.obj'))
     init_surf_list.sort()
 
     temp_mesh = o3d.io.read_triangle_mesh(os.path.join(root, task, 'temp.obj'))
