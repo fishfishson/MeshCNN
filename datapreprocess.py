@@ -194,7 +194,7 @@ def main():
     proj_data_dir = '/home/zyuaq/mesh/MeshCNN/datasets/'
     task = 'Heart2'
     num_surf = 5
-    # process_MSD(root, task, num_surf)
+    process_MSD(root, task, num_surf)
     surf_preprocess(root, task)
     split_list(root, num_surf, proj_data_dir)
 
