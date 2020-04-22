@@ -79,7 +79,7 @@ def process_MSD(root, task='Heart2', num_surf=30):
 
 
 def surf_preprocess(root):
-
+    pass
 
 
 def get_processed_list(root='', task='Heart'):
