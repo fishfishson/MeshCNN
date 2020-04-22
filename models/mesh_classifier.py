@@ -178,7 +178,7 @@ class RegresserModel:
     def backward(self, out):
         for i in range(self.mesh.ve):
 
-        self.loss = self.criterion(out + , self.gt_vertices)
+        self.loss = self.criterion(out , self.gt_vertices)
         self.loss.backward()
 
     def optimize_parameters(self):
