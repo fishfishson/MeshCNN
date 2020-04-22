@@ -123,7 +123,7 @@ def split_list(root, proj_data_dir):
 def main():
     root = '/home/zyuaq/mesh/data/MSD'
     proj_data_dir = '/home/zyuaq/mesh/MeshCNN/datasets/'
-    # process_MSD(root)
+    process_MSD(root)
     # surf_preprocess(root)
     # img_list, gt_list, surf_list = get_processed_list(root)
     # print(img_list)
