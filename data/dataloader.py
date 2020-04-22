@@ -1,9 +1,15 @@
 import os
+from typing import List
+
 import numpy as np
 import torch
 import nibabel as nib
 from torch.utils.data import Dataset
+from data.base_dataset import BaseDataset
 import copy
+from models.layers.mesh import Mesh
+import open3d as o3d
+from util.util import pad
 
 
 class MSDTrainDataset(Dataset):
@@ -108,3 +114,52 @@ class MSDTrainDataset(Dataset):
 
     def __len__(self):
         return len(self.coords['idx'])
+
+
+class MSDSurfTrainDataset(BaseDataset):
+    def __init__(self, opt):
+        super(MSDSurfTrainDataset, self).__init__(opt)
+        self.opt = opt
+        self.lst_path = opt.lst_path
+
+        with open(self.lst_path, 'r') as f:
+            self.file_lst = [line.strip() for line in f]
+
+        self.img_lst = []
+        self.mask_lst = []
+        self.surf_lst = []
+        self.init_surf_lst = []
+        self.init_surf_ids = []
+
+        for idx in range(len(self.file_lst)):
+            ith_info = self.file_lst[idx].split(" ")
+            self.img_lst.append(ith_info[0])
+            self.mask_lst.append(ith_info[1])
+            self.surf_lst.append(ith_info[2])
+
+        self.get_init_surf()
+        self.size = len(self.init_surf_lst)
+        self.get_mean_std()
+
+    def get_init_surf(self):
+        pass
+
+    def __getitem__(self, idx):
+        index = self.init_surf_ids[idx]
+        mesh = Mesh(self.init_surf_lst[idx], self.opt, True, self.opt.export_folder) # fill mesh ??
+
+        data = {}
+        data['mesh'] = mesh
+        data['img'] = nib.load(self.img_lst[index]).get_fdata().transpose(2, 1, 0)
+        data['label'] = nib.load(self.mask_lst[index]).get_fdata().transpose(2, 1, 0)
+        data['surf_vertices'] = np.asarray(o3d.io.read_triangle_mesh(self.surf_lst[index]).vertices)
+
+        # get edge features
+        edge_features = mesh.extract_features()
+        edge_features = pad(edge_features, self.opt.ninput_edges)
+        data['edge_features'] = (edge_features - self.mean) / self.std
+
+        return data
+
+    def __len__(self):
+        return self.size

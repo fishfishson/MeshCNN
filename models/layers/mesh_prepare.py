@@ -26,6 +26,7 @@ def fill_mesh(mesh2fill, file: str, opt):
     mesh2fill.features = mesh_data['features']
     mesh2fill.sides = mesh_data['sides']
 
+
 def get_mesh_path(file: str, num_aug: int):
     filename, _ = os.path.splitext(file)
     dir_name = os.path.dirname(filename)
@@ -36,8 +37,8 @@ def get_mesh_path(file: str, num_aug: int):
         os.makedirs(load_dir, exist_ok=True)
     return load_file
 
-def from_scratch(file, opt):
 
+def from_scratch(file, opt):
     class MeshPrep:
         def __getitem__(self, item):
             return eval('self.' + item)
@@ -61,6 +62,7 @@ def from_scratch(file, opt):
         post_augmentation(mesh_data, opt)
     mesh_data.features = extract_features(mesh_data)
     return mesh_data
+
 
 def fill_from_file(mesh, file):
     mesh.filename = ntpath.split(file)[1]
@@ -158,7 +160,8 @@ def build_gemm(mesh, faces, face_areas):
     mesh.gemm_edges = np.array(edge_nb, dtype=np.int64)
     mesh.sides = np.array(sides, dtype=np.int64)
     mesh.edges_count = edges_count
-    mesh.edge_areas = np.array(mesh.edge_areas, dtype=np.float32) / np.sum(face_areas) #todo whats the difference between edge_areas and edge_lenghts?
+    mesh.edge_areas = np.array(mesh.edge_areas, dtype=np.float32) / np.sum(
+        face_areas)  # todo whats the difference between edge_areas and edge_lenghts?
 
 
 def compute_face_normals_and_areas(mesh, faces):
@@ -187,7 +190,7 @@ def post_augmentation(mesh, opt):
 
 def slide_verts(mesh, prct):
     edge_points = get_edge_points(mesh)
-    dihedral = dihedral_angle(mesh, edge_points).squeeze() #todo make fixed_division epsilon=0
+    dihedral = dihedral_angle(mesh, edge_points).squeeze()  # todo make fixed_division epsilon=0
     thr = np.mean(dihedral) + np.std(dihedral)
     vids = np.random.permutation(len(mesh.ve))
     target = int(prct * len(vids))
@@ -272,6 +275,7 @@ def rebuild_face(face, new_face):
             face[i] = new_point
             break
     return face
+
 
 def check_area(mesh, faces):
     face_normals = np.cross(mesh.vs[faces[:, 1]] - mesh.vs[faces[:, 0]],
@@ -399,6 +403,7 @@ def get_normals(mesh, edge_points, side):
     normals /= div[:, np.newaxis]
     return normals
 
+
 def get_opposite_angles(mesh, edge_points, side):
     edges_a = mesh.vs[edge_points[:, side // 2]] - mesh.vs[edge_points[:, side // 2 + 2]]
     edges_b = mesh.vs[edge_points[:, 1 - side // 2]] - mesh.vs[edge_points[:, side // 2 + 2]]
@@ -421,6 +426,7 @@ def get_ratios(mesh, edge_points, side):
     closest_point = point_a + (projection_length / edges_lengths)[:, np.newaxis] * line_ab
     d = np.linalg.norm(point_o - closest_point, ord=2, axis=1)
     return d / edges_lengths
+
 
 def fixed_division(to_div, epsilon):
     if epsilon == 0:

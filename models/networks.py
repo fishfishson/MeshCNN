@@ -27,6 +27,7 @@ def get_norm_layer(norm_type='instance', num_groups=1):
         raise NotImplementedError('normalization layer [%s] is not found' % norm_type)
     return norm_layer
 
+
 def get_norm_args(norm_layer, nfeats_list):
     if hasattr(norm_layer, '__name__') and norm_layer.__name__ == 'NoNorm':
         norm_args = [{'fake': True} for f in nfeats_list]
@@ -38,20 +39,25 @@ def get_norm_args(norm_layer, nfeats_list):
         raise NotImplementedError('normalization layer [%s] is not found' % norm_layer.func.__name__)
     return norm_args
 
-class NoNorm(nn.Module): #todo with abstractclass and pass
+
+class NoNorm(nn.Module):  # todo with abstractclass and pass
     def __init__(self, fake=True):
         self.fake = fake
         super(NoNorm, self).__init__()
+
     def forward(self, x):
         return x
+
     def __call__(self, x):
         return self.forward(x)
+
 
 def get_scheduler(optimizer, opt):
     if opt.lr_policy == 'lambda':
         def lambda_rule(epoch):
             lr_l = 1.0 - max(0, epoch + 1 + opt.epoch_count - opt.niter) / float(opt.niter_decay + 1)
             return lr_l
+
         scheduler = lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda_rule)
     elif opt.lr_policy == 'step':
         scheduler = lr_scheduler.StepLR(optimizer, step_size=opt.lr_decay_iters, gamma=0.1)
@@ -79,12 +85,13 @@ def init_weights(net, init_type, init_gain):
         elif classname.find('BatchNorm2d') != -1:
             init.normal_(m.weight.data, 1.0, init_gain)
             init.constant_(m.bias.data, 0.0)
+
     net.apply(init_func)
 
 
 def init_net(net, init_type, init_gain, gpu_ids):
     if len(gpu_ids) > 0:
-        assert(torch.cuda.is_available())
+        assert (torch.cuda.is_available())
         net.cuda(gpu_ids[0])
         net = net.cuda()
         net = torch.nn.DataParallel(net, gpu_ids)
@@ -110,12 +117,15 @@ def define_classifier(input_nc, ncf, ninput_edges, nclasses, opt, gpu_ids, arch,
         raise NotImplementedError('Encoder model name [%s] is not recognized' % arch)
     return init_net(net, init_type, init_gain, gpu_ids)
 
+
 def define_loss(opt):
     if opt.dataset_mode == 'classification':
         loss = torch.nn.CrossEntropyLoss()
     elif opt.dataset_mode == 'segmentation':
-        loss = torch.nn.CrossEntropyLoss(ignore_index=-1)
+        # loss = torch.nn.CrossEntropyLoss(ignore_index=-1)
+        loss = torch.nn.MSELoss()
     return loss
+
 
 ##############################################################################
 # Classes For Classification / Segmentation Networks
@@ -124,6 +134,7 @@ def define_loss(opt):
 class MeshConvNet(nn.Module):
     """Network for learning a global shape descriptor (classification)
     """
+
     def __init__(self, norm_layer, nf0, conv_res, nclasses, input_res, pool_res, fc_n,
                  nresblocks=3):
         super(MeshConvNet, self).__init__()
@@ -135,7 +146,6 @@ class MeshConvNet(nn.Module):
             setattr(self, 'conv{}'.format(i), MResConv(ki, self.k[i + 1], nresblocks))
             setattr(self, 'norm{}'.format(i), norm_layer(**norm_args[i]))
             setattr(self, 'pool{}'.format(i), MeshPool(self.res[i + 1]))
-
 
         self.gp = torch.nn.AvgPool1d(self.res[-1])
         # self.gp = torch.nn.MaxPool1d(self.res[-1])
@@ -155,6 +165,7 @@ class MeshConvNet(nn.Module):
         x = F.relu(self.fc1(x))
         x = self.fc2(x)
         return x
+
 
 class MResConv(nn.Module):
     def __init__(self, in_channels, out_channels, skips=1):
@@ -182,6 +193,7 @@ class MResConv(nn.Module):
 class MeshEncoderDecoder(nn.Module):
     """Network for fully-convolutional tasks (segmentation)
     """
+
     def __init__(self, pools, down_convs, up_convs, blocks=0, transfer_data=True):
         super(MeshEncoderDecoder, self).__init__()
         self.transfer_data = transfer_data
@@ -197,6 +209,7 @@ class MeshEncoderDecoder(nn.Module):
 
     def __call__(self, x, meshes):
         return self.forward(x, meshes)
+
 
 class DownConv(nn.Module):
     def __init__(self, in_channels, out_channels, blocks=0, pool=0):
@@ -370,7 +383,7 @@ class MeshDecoder(nn.Module):
         for i, up_conv in enumerate(self.up_convs):
             before_pool = None
             if encoder_outs is not None:
-                before_pool = encoder_outs[-(i+2)]
+                before_pool = encoder_outs[-(i + 2)]
             fe = up_conv((fe, meshes), before_pool)
         fe = self.final_conv((fe, meshes))
         return fe
@@ -378,9 +391,11 @@ class MeshDecoder(nn.Module):
     def __call__(self, x, encoder_outs=None):
         return self.forward(x, encoder_outs)
 
-def reset_params(model): # todo replace with my init
+
+def reset_params(model):  # todo replace with my init
     for i, m in enumerate(model.modules()):
         weight_init(m)
+
 
 def weight_init(m):
     if isinstance(m, nn.Conv2d):

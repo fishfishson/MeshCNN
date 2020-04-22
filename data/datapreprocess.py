@@ -4,6 +4,7 @@ import time
 import numpy as np
 from tqdm import tqdm
 import mcubes
+import elasticdeform
 
 
 def get_ACDC_list(root, phase='training'):
@@ -40,22 +41,7 @@ def normalize(img):
     return img_norm
 
 
-# def center_crop(img, size):
-#     assert img.shape[0] >= size[0]
-#     assert img.shape[1] >= size[1]
-#     assert img.shape[2] >= size[2]
-
-#     offset_x = (img.shape[0] - size[0]) // 2
-#     offset_y = (img.shape[1] - size[1]) // 2
-#     offset_z = (img.shape[2] - size[2]) // 2
-
-#     img_ = img[offset_x:offset_x + size[0], 
-#               offset_x:offset_y + size[1],
-#               offset_x:offset_z + size[2]]
-
-#     return img_
-
-def process_MSD(root, task='Heart', save=None):
+def process_MSD(root, task='Heart', num_surf=30):
     img_list, gt_list = get_MSD_list(root, task)
     save_dir = os.path.join(root, task)
 
@@ -70,17 +56,30 @@ def process_MSD(root, task='Heart', save=None):
         img_ = iso_resample(img, [1.5, 1.5, 1.5], islabel=False)
         gt_ = iso_resample(gt, [1.5, 1.5, 1.5], islabel=True)
 
-        # normalize
+        # normal
         img_ = normalize(img_)
 
-        # save
+        # sample surf init
+        for j in range(num_surf):
+            gt_np = gt_.numpy()
+            gt_dfm = elasticdeform.deform_random_grid(gt_np, 4, 4, 0)
+            gt_dfm_smooth = mcubes.smooth_gaussian(gt_dfm, 1)
+            v, e = mcubes.marching_cubes(gt_dfm_smooth, 0)
+            mcubes.export_obj(v, e, os.path.join(save_dir, 'surfs_unaligned',
+                                                 '{:0>2d}_{:0>2d}_init_surf.obj'.format(i + 1, j + 1)))
+
+        # write image
         ants.image_write(img_, os.path.join(save_dir, 'images', '{:0>2d}img.nii'.format(i + 1)))
         ants.image_write(gt_, os.path.join(save_dir, 'labels', '{:0>2d}gt.nii'.format(i + 1)))
 
-        # extract surf
-        gt_smooth = mcubes.smooth_gaussian(gt_.numpy(), 1)
+        gt_np = gt_.numpy()
+        gt_smooth = mcubes.smooth_gaussian(gt_np, 1)
         v, e = mcubes.marching_cubes(gt_smooth, 0)
         mcubes.export_obj(v, e, os.path.join(save_dir, 'surfs_unaligned', '{:0>2d}surf.obj'.format(i + 1)))
+
+
+def surf_preprocess(root):
+    pass
 
 
 def get_processed_list(root='', task='Heart'):
@@ -121,9 +120,19 @@ def split_list(root, proj_data_dir):
     np.savetxt(os.path.join(proj_data_dir, 'test_list.txt'), test_list, fmt='%s')
 
 
-if __name__ == '__main__':
+def main():
     root = '/home/zyuaq/mesh/data/MSD'
     proj_data_dir = '/home/zyuaq/mesh/MeshCNN/datasets/'
     process_MSD(root)
+    surf_preprocess(root)
     img_list, gt_list, surf_list = get_processed_list(root)
+    print(img_list)
+    print('*' * 10)
+    print(gt_list)
+    print('*' * 10)
+    print(surf_list)
     split_list(root, proj_data_dir)
+
+
+if __name__ == '__main__':
+    main()
