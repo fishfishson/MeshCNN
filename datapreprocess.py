@@ -42,6 +42,19 @@ def normalize(img):
     return img_norm
 
 
+def crop(img, size=(256, 256, 128)):
+    z, y, x = img.shape
+    new_img = np.zeros(size)
+    ori = (z // 2 - size[0] // 2,
+           y // 2 - size[1] // 2,
+           size[2] // 2 - x // 2)
+    new_img[:, :, ori[2]: ori[2] + x] = img[
+                                        ori[0]: ori[0] + size[0],
+                                        ori[1]: ori[1] + size[1],
+                                        :]
+    return new_img
+
+
 def process_MSD(root, task='Heart2', num_surf=5):
     img_list, gt_list = get_MSD_list(root, task)
     save_dir = os.path.join(root, task)
@@ -60,9 +73,14 @@ def process_MSD(root, task='Heart2', num_surf=5):
         # normal
         img_ = normalize(img_)
 
+        # crop
+        img_np = img_.numpy()
+        gt_np = gt_.numpy()
+        img_np = crop(img_np)
+        gt_np = crop(gt_np)
+
         # sample surf init
         for j in tqdm(range(num_surf)):
-            gt_np = gt_.numpy()
             gt_dfm = elasticdeform.deform_random_grid(gt_np, 4, 4, 0)
             gt_dfm_smooth = mcubes.smooth_gaussian(gt_dfm, 1)
             v, e = mcubes.marching_cubes(gt_dfm_smooth, 0)
@@ -70,10 +88,11 @@ def process_MSD(root, task='Heart2', num_surf=5):
                                                  '{:0>2d}_{:0>2d}surf_init.obj'.format(i + 1, j + 1)))
 
         # write image
-        ants.image_write(img_, os.path.join(save_dir, 'images', '{:0>2d}img.nii'.format(i + 1)))
-        ants.image_write(gt_, os.path.join(save_dir, 'labels', '{:0>2d}gt.nii'.format(i + 1)))
+        img_nii = ants.from_numpy(img_np, img_.origin, img_.spacing, img_.direction, img_.has_components, img_.is_rgb)
+        gt_nii = ants.from_numpy(gt_np, gt_.origin, gt_.spacing, gt_.direction, gt_.has_components, gt_.is_rgb)
+        ants.image_write(img_nii, os.path.join(save_dir, 'images', '{:0>2d}img.nii'.format(i + 1)))
+        ants.image_write(gt_nii, os.path.join(save_dir, 'labels', '{:0>2d}gt.nii'.format(i + 1)))
 
-        gt_np = gt_.numpy()
         gt_smooth = mcubes.smooth_gaussian(gt_np, 1)
         v, e = mcubes.marching_cubes(gt_smooth, 0)
         mcubes.export_obj(v, e, os.path.join(save_dir, 'surfs_unaligned', '{:0>2d}surf.obj'.format(i + 1)))
@@ -163,6 +182,8 @@ def split_list(root, num_surf, proj_data_dir):
         train_gt_surf.append(train_gt_surf_i)
     train_gt_surf = np.repeat(np.array(train_gt_surf), num_surf)
     train_init_surf = np.array(train_init_surf)
+    print(train_gt_surf)
+    print(train_init_surf)
     assert train_gt_surf.shape[0] == train_init_surf.shape[0]
 
     test_img = img_array[n_train:]
@@ -180,6 +201,7 @@ def split_list(root, num_surf, proj_data_dir):
         test_gt_surf.append(test_gt_surf_i)
     test_gt_surf = np.repeat(np.array(test_gt_surf), num_surf)
     test_init_surf = np.array(test_init_surf)
+
     assert test_gt_surf.shape[0] == test_init_surf.shape[0]
 
     train_list = np.vstack([train_img, train_gt, train_gt_surf, train_init_surf]).T
@@ -194,7 +216,7 @@ def main():
     proj_data_dir = '/home/zyuaq/mesh/MeshCNN/datasets/'
     task = 'Heart2'
     num_surf = 5
-    # process_MSD(root, task, num_surf)
+    process_MSD(root, task, num_surf)
     surf_preprocess(root, task)
     split_list(root, num_surf, proj_data_dir)
 

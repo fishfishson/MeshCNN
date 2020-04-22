@@ -2,6 +2,7 @@ import torch
 from . import networks
 from os.path import join
 from util.util import seg_accuracy, print_network
+import copy
 
 
 class ClassifierModel:
@@ -145,6 +146,9 @@ class RegresserModel:
         self.optimizer = None
         self.edge_features = None
         self.mesh = None
+        self.ve = None
+        self.vs = None
+        self.gt_vertices = None
         self.loss = None
 
         #
@@ -170,15 +174,20 @@ class RegresserModel:
         self.edge_features = input_edge_features.to(self.device).requires_grad_(self.is_train)
         self.gt_vertices = gt_vertices.to(self.device)
         self.mesh = data['mesh']
+        self.ve = copy.deepcopy(self.mesh.ve)
+        self.vs = copy.deepcopy(self.mesh.vs)
 
     def forward(self):
         out = self.net(self.edge_features, self.mesh) # (n, 1, l)
         return out
 
     def backward(self, out):
-        for i in range(self.mesh.ve):
+        vs_deformed = torch.from_numpy(self.vs)
+        for i in range(self.ve):
+            edges_v = self.ve[:, i]
+            dis = torch.mean(out[:, 0, edges_v])
 
-        self.loss = self.criterion(out , self.gt_vertices)
+        self.loss = self.criterion(out, self.gt_vertices)
         self.loss.backward()
 
     def optimize_parameters(self):
@@ -228,7 +237,6 @@ class RegresserModel:
             out = self.forward()
             # compute number of correct
             pred_class = out.data.max(1)[1]
-            label_class = self.labels
             self.export_segmentation(pred_class.cpu())
             correct = self.get_accuracy(pred_class, label_class)
         return correct, len(label_class)

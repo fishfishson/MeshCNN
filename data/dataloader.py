@@ -146,8 +146,6 @@ class MSDSurfTrainDataset(BaseDataset):
         data['mesh'] = mesh
         gt_surf = o3d.io.read_triangle_mesh(self.gt_surf_lst[index])
         data['gt_surf_v'] = np.asarray(gt_surf.vertices)
-        data['gt_surf_e'] = np.asarray(gt_surf.triangles)
-
         # get edge features
         edge_features = mesh.extract_features()
         edge_features = pad(edge_features, self.opt.ninput_edges)
