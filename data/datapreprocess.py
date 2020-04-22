@@ -80,7 +80,7 @@ def process_MSD(root, task='Heart', save=None):
         # extract surf
         gt_smooth = mcubes.smooth_gaussian(gt_.numpy(), 1)
         v, e = mcubes.marching_cubes(gt_smooth, 0)
-        mcubes.export_obj(v, e, os.path.join(save_dir, 'surfs', '{:0>2d}surf.obj'.format(i + 1)))
+        mcubes.export_obj(v, e, os.path.join(save_dir, 'surfs_unaligned', '{:0>2d}surf.obj'.format(i + 1)))
 
 
 def get_processed_list(root='', task='Heart'):
