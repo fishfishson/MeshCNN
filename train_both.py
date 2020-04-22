@@ -32,6 +32,7 @@ def train(opt):
                 t_data = iter_start_time - iter_data_time
             total_steps += opt.batch_size
             epoch_iter += opt.batch_size
+
             mesh_model.set_input(data)
             mesh_model.optimize_parameters()
 

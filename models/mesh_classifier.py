@@ -166,20 +166,19 @@ class RegresserModel:
 
     def set_input(self, data):
         input_edge_features = torch.from_numpy(data['edge_features']).float()
-        labels = torch.from_numpy(data['label']).long()
-        # set inputs
+        gt_vertices = torch.from_numpy(data['gt_vertices']).float()
         self.edge_features = input_edge_features.to(self.device).requires_grad_(self.is_train)
-        self.labels = labels.to(self.device)
+        self.gt_vertices = gt_vertices.to(self.device)
         self.mesh = data['mesh']
-        if self.opt.dataset_mode == 'segmentation' and not self.is_train:
-            self.soft_label = torch.from_numpy(data['soft_label'])
 
     def forward(self):
-        out = self.net(self.edge_features, self.mesh)
+        out = self.net(self.edge_features, self.mesh) # (n, 1, l)
         return out
 
     def backward(self, out):
-        self.loss = self.criterion(out, self.labels)
+        for i in range(self.mesh.ve):
+
+        self.loss = self.criterion(out + , self.gt_vertices)
         self.loss.backward()
 
     def optimize_parameters(self):

@@ -125,24 +125,18 @@ class MSDSurfTrainDataset(BaseDataset):
         with open(self.lst_path, 'r') as f:
             self.file_lst = [line.strip() for line in f]
 
-        self.img_lst = []
-        self.mask_lst = []
-        self.surf_lst = []
+        self.gt_surf_lst = []
         self.init_surf_lst = []
         self.init_surf_ids = []
 
         for idx in range(len(self.file_lst)):
             ith_info = self.file_lst[idx].split(" ")
-            self.img_lst.append(ith_info[0])
-            self.mask_lst.append(ith_info[1])
-            self.surf_lst.append(ith_info[2])
+            self.gt_surf_lst.append(ith_info[2])
+            self.init_surf_lst.append(ith_info[3])
+            self.init_surf_ids.append(idx)
 
-        self.get_init_surf()
         self.size = len(self.init_surf_lst)
         self.get_mean_std()
-
-    def get_init_surf(self):
-        pass
 
     def __getitem__(self, idx):
         index = self.init_surf_ids[idx]
@@ -150,9 +144,9 @@ class MSDSurfTrainDataset(BaseDataset):
 
         data = {}
         data['mesh'] = mesh
-        data['img'] = nib.load(self.img_lst[index]).get_fdata().transpose(2, 1, 0)
-        data['label'] = nib.load(self.mask_lst[index]).get_fdata().transpose(2, 1, 0)
-        data['surf_vertices'] = np.asarray(o3d.io.read_triangle_mesh(self.surf_lst[index]).vertices)
+        gt_surf = o3d.io.read_triangle_mesh(self.gt_surf_lst[index])
+        data['gt_surf_v'] = np.asarray(gt_surf.vertices)
+        data['gt_surf_e'] = np.asarray(gt_surf.triangles)
 
         # get edge features
         edge_features = mesh.extract_features()
