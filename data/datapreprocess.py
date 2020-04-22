@@ -41,13 +41,13 @@ def normalize(img):
     return img_norm
 
 
-def process_MSD(root, task='Heart2', num_surf=30):
+def process_MSD(root, task='Heart2', num_surf=5):
     img_list, gt_list = get_MSD_list(root, task)
     save_dir = os.path.join(root, task)
 
     n = len(img_list)
-    for i in tqdm(range(n)):
-        time.sleep(0.1)
+    for i in range(n):
+        print('Process img: {}'.format(img_list[i]))
 
         img = ants.image_read(img_list[i])
         gt = ants.image_read(gt_list[i])
@@ -60,7 +60,7 @@ def process_MSD(root, task='Heart2', num_surf=30):
         img_ = normalize(img_)
 
         # sample surf init
-        for j in range(num_surf):
+        for j in tqdm(range(num_surf)):
             gt_np = gt_.numpy()
             gt_dfm = elasticdeform.deform_random_grid(gt_np, 4, 4, 0)
             gt_dfm_smooth = mcubes.smooth_gaussian(gt_dfm, 1)
