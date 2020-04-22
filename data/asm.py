@@ -1,4 +1,4 @@
-import pycpd
+from pycpd import DeformableRegistration
 import open3d as o3d
 import os, glob
 import copy
@@ -181,7 +181,7 @@ def align_shape(temp_pts, tgt_lst):
         R = T[:3, :3]
         t = T[:3, 3]
         temp_pts_icp = temp_pts_norm.dot(R.T) + t.T
-        reg = pycpd.deformable_registration(X=tgt_pts_norm, Y=temp_pts_icp, alpha=2, beta=2)
+        reg = DeformableRegistration(X=tgt_pts_norm, Y=temp_pts_icp, alpha=2, beta=2)
         temp_pts_cpd, _ = reg.register()
 
         tgts[i] = temp_pts_cpd / tgt_pts_scale + tgt_pts_center
