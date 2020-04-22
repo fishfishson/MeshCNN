@@ -181,7 +181,7 @@ def align_shape(temp_pts, tgt_lst):
         R = T[:3, :3]
         t = T[:3, 3]
         temp_pts_icp = temp_pts_norm.dot(R.T) + t.T
-        reg = DeformableRegistration(X=tgt_pts_norm, Y=temp_pts_icp, alpha=2, beta=2)
+        reg = DeformableRegistration(X=tgt_pts_norm, Y=temp_pts_icp, alpha=1, beta=1)
         temp_pts_cpd, _ = reg.register()
 
         tgts[i] = temp_pts_cpd / tgt_pts_scale + tgt_pts_center
@@ -208,8 +208,11 @@ def main():
 
     for i in range(align_shapes.shape[0]):
         temps_aligned_mesh = npcvtobj(temp_mesh, align_shapes[i])
-        o3d.io.write_triangle_mesh(os.path.join(root, 'surfs', '{:0>2d}.obj'.format(i + 1)),
-                                   temps_aligned_mesh)
+        o3d.io.write_triangle_mesh(os.path.join(root, 'surfs', '{:0>2d}surf.obj'.format(i + 1)),
+                                   temps_aligned_mesh,
+                                   write_vertex_normals=False,
+                                   write_vertex_colors=False,
+                                   write_triangle_uvs=False)
 
 
 if __name__ == '__main__':
