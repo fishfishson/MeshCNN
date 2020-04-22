@@ -17,7 +17,7 @@ def get_ACDC_list(root, phase='training'):
     return img_list, gt_list
 
 
-def get_MSD_list(root, task='Heart'):
+def get_MSD_list(root, task='Heart2'):
     img_list = glob.glob(os.path.join(root, task, 'imagesTr', '*.nii.gz'))
     img_list.sort()
 
@@ -41,7 +41,7 @@ def normalize(img):
     return img_norm
 
 
-def process_MSD(root, task='Heart', num_surf=30):
+def process_MSD(root, task='Heart2', num_surf=30):
     img_list, gt_list = get_MSD_list(root, task)
     save_dir = os.path.join(root, task)
 
@@ -79,7 +79,7 @@ def process_MSD(root, task='Heart', num_surf=30):
 
 
 def surf_preprocess(root):
-    pass
+
 
 
 def get_processed_list(root='', task='Heart'):
@@ -123,15 +123,15 @@ def split_list(root, proj_data_dir):
 def main():
     root = '/home/zyuaq/mesh/data/MSD'
     proj_data_dir = '/home/zyuaq/mesh/MeshCNN/datasets/'
-    process_MSD(root)
-    surf_preprocess(root)
-    img_list, gt_list, surf_list = get_processed_list(root)
-    print(img_list)
-    print('*' * 10)
-    print(gt_list)
-    print('*' * 10)
-    print(surf_list)
-    split_list(root, proj_data_dir)
+    # process_MSD(root)
+    # surf_preprocess(root)
+    # img_list, gt_list, surf_list = get_processed_list(root)
+    # print(img_list)
+    # print('*' * 10)
+    # print(gt_list)
+    # print('*' * 10)
+    # print(surf_list)
+    # split_list(root, proj_data_dir)
 
 
 if __name__ == '__main__':
