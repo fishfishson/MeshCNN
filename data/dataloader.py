@@ -119,6 +119,7 @@ class MSDSurfTrainDataset(BaseDataset):
         super(MSDSurfTrainDataset, self).__init__(opt)
         self.opt = opt
         self.lst_path = opt.lst_path
+        self.root = opt.dataroot
 
         with open(self.lst_path, 'r') as f:
             self.file_lst = [line.strip() for line in f]
