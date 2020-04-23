@@ -8,7 +8,6 @@ from losses.loss import DiceWithCELoss
 from util.logger import log
 from metrics.DiceEval import diceEval, AverageMeter
 import os
-os.environ['CUDA_LAUNCH_BLOCKING'] = "1"
 from models.networks import get_scheduler
 
 

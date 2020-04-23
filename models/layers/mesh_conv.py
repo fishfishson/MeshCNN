@@ -75,9 +75,9 @@ class MeshConv(nn.Module):
         add the edge_id itself to make #edges x 5
         then pad to desired size e.g., xsz x 5
         """
-        padded_gemm = torch.tensor(m.gemm_edges, device=device).float()
+        padded_gemm = torch.tensor(m.gemm_edges).float().cuda()
         padded_gemm = padded_gemm.requires_grad_()
-        padded_gemm = torch.cat((torch.arange(m.edges_count, device=device).float().unsqueeze(1), padded_gemm), dim=1)
+        padded_gemm = torch.cat((torch.arange(m.edges_count).float().unsqueeze(1).cuda(), padded_gemm), dim=1)
         # pad using F
         padded_gemm = F.pad(padded_gemm, (0, 0, 0, xsz - m.edges_count), "constant", 0)
         padded_gemm = padded_gemm.unsqueeze(0)
