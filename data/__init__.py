@@ -5,8 +5,8 @@ def CreateDataset(opt):
     """loads dataset class"""
 
     if opt.dataset_mode == 'segmentation':
-        from data.segmentation_data import SegmentationData
-        dataset = SegmentationData(opt)
+        from data.dataloader import MSDSurfTrainDataset
+        dataset = MSDSurfTrainDataset(opt)
     elif opt.dataset_mode == 'classification':
         from data.classification_data import ClassificationData
         dataset = ClassificationData(opt)

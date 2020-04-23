@@ -2,7 +2,7 @@ from models.mesh_classifier import RegresserModel, SurfLoss
 from data.dataloader import MSDSurfTrainDataset
 from util.writer import Writer
 import time
-from torch.utils.data import DataLoader
+from data import DataLoader
 from options.train_options import TrainOptions
 import torch
 import torch.nn as nn
@@ -14,7 +14,7 @@ from torch.optim import lr_scheduler
 # train
 def train(opt):
     dataset = MSDSurfTrainDataset(opt)
-    dataloader = DataLoader(dataset)
+    dataloader = DataLoader(opt)
 
     writer = Writer(opt)
 
