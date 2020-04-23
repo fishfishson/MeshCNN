@@ -66,8 +66,9 @@ def train(dataloader, model, optimizer, scheduler, total_epochs, save_interval, 
             vtx = torch.from_numpy(vs).float().cuda()
 
             out_mask, edge_offsets = model(img_patch, edge_fs, edges, vs, mesh)
-            n_v = vs.shape[0]
-            for i in range(opt.batch_size):
+            n_b = vtx.shape[0]
+            n_v = vtx.shape[1]
+            for i in range(n_b):
                 for j in range(n_v):
                     e = ve[i, j]
                     edge_offset = edge_offsets[i, :, e]
