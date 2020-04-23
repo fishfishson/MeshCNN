@@ -179,8 +179,13 @@ def unpatch(patches, batch_size):
     print(size)
     channel = size[1]
     patches = patches.permute(1, 0, 2, 3, 4)
+    print(patches.shape)
     patches = patches.reshape(channel, -1, 2, 2, 2, size[2], size[3], size[4])
+    print(patches.shape)
     patches = patches.permute(0, 1, 2, 5, 3, 6, 4, 7)
+    print(patches.shape)
     patches = patches.reshape(channel, batch_size, 2 * size[2], 2 * size[3], 2 * size[4])
+    print(patches.shape)
     patches = patches.permute(1, 0, 2, 3, 4)
+    print(patches.shape)
     return patches
