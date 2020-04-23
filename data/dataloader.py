@@ -124,29 +124,53 @@ class MSDSurfTrainDataset(BaseDataset):
 
         with open(self.lst_path, 'r') as f:
             self.file_lst = [line.strip() for line in f]
-
+        self.img_lst = []
+        self.mask_lst = []
         self.gt_surf_lst = []
         self.init_surf_lst = []
-        self.init_surf_ids = []
 
         for idx in range(len(self.file_lst)):
             ith_info = self.file_lst[idx].split(" ")
+            self.img_lst.append(ith_info[0])
+            self.mask_lst.append(ith_info[1])
             self.gt_surf_lst.append(ith_info[2])
             self.init_surf_lst.append(ith_info[3])
-            self.init_surf_ids.append(idx)
 
         self.size = len(self.init_surf_lst)
         self.get_mean_std()
 
-    def __getitem__(self, idx):
-        index = self.init_surf_ids[idx]
-        mesh = Mesh(self.init_surf_lst[idx], self.opt, True, self.opt.export_folder) # fill mesh ??
+        zz, yy, xx = np.meshgrid([0, 1], [0, 1], [0, 1])
+        self.indices = np.vstack((128 * zz.flatten(), 128 * yy.flatten(), 64 * xx.flatten())).T
 
-        data = {}
+    def patch(self, idx):
+        img = nib.load(self.img_lst[idx]).get_fdata()
+        mask = nib.load(self.mask_lst[idx]).get_fdata()
+        img_patch = np.zeros((8, 1, 128, 128, 64))
+        mask_patch = np.zeros_like(img_patch)
+        for i in range(self.indices.shape[0]):
+            index = self.indices[i]
+            img_patch[i, :] = img[
+                              index[0]:index[0] + 128,
+                              index[1]:index[1] + 128,
+                              index[2]:index[2] + 64]
+            mask_patch[i, :] = mask[
+                               index[0]:index[0] + 128,
+                               index[1]:index[1] + 128,
+                               index[2]:index[2] + 64]
+        return img_patch, mask_patch
+
+    def __getitem__(self, idx):
+        mesh = Mesh(self.init_surf_lst[idx], self.opt, True, self.opt.export_folder)  # fill mesh ??
+        gt_surf = o3d.io.read_triangle_mesh(self.gt_surf_lst[idx])
+        img_patch, mask_patch = self.patch(idx)
+
+        data = dict()
         data['mesh'] = mesh
-        gt_surf = o3d.io.read_triangle_mesh(self.gt_surf_lst[index])
-        data['gt_surf_v'] = np.asarray(gt_surf.vertices)
-        # get edge features
+        data['gt_vs'] = np.asarray(gt_surf.vertices)
+        data['vs'] = mesh.vs
+        data['edges'] = mesh.edges
+        data['img_patch'] = img_patch
+        data['mask_patch'] = mask_patch
         edge_features = mesh.extract_features()
         edge_features = pad(edge_features, self.opt.ninput_edges)
         data['edge_features'] = (edge_features - self.mean) / self.std

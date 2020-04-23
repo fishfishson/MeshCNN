@@ -101,12 +101,14 @@ def compute_dice(input, target):
 
 class DiceLoss(nn.Module):
 
-    def __init__(self):
+    def __init__(self, ignore_bg=False):
         super(DiceLoss, self).__init__()
+        self.ignore_bg = ignore_bg
 
     def forward(self, input, target):
         dice = compute_dice(input, target)
-        dice = dice[:, 1:]  # we ignore bg dice val, and take the fg
+        if self.ignore_bg:
+            dice = dice[:, 1:]  # we ignore bg dice val, and take the fg
         dice = torch.sum(dice, dim=1)
         dice = dice / (input.size(1) - 1)
         dice_total = -1.0 * torch.sum(dice) / dice.size(0)  # divide by batch_sz
@@ -206,5 +208,19 @@ class MixLoss(nn.Module):
             loss_class += weight[i] * self.loss[i](input_class, target)
 
         loss = loss_class + loss_regress
+
+        return loss
+
+
+class DiceWithCELoss(nn.Module):
+    def __init__(self, weight=0.5):
+        self.w = weight
+        self.dice_loss = DiceLoss()
+        self.ce_loss = nn.CrossEntropyLoss(ignore_index=-1)
+
+    def forward(self, pred, target):
+        dice_loss = self.dice_loss(pred, target)
+        ce_loss = self.ce_loss(pred, target)
+        loss = dice_loss + self.w * ce_loss
 
         return loss

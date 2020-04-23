@@ -347,23 +347,23 @@ class DAResNet3d(nn.Module):
         ))
         self.inplanes = k
         self.layer1 = self._make_layer(BasicBlock, k, 3, kernel_size=(3, 3, 3), stride=1)
-        self.layer2 = self._make_layer(BasicBlock, 2 * k, 4, kernel_size=(1, 3, 3), stride=2)
-        self.layer3 = self._make_layer(BasicBlock, 4 * k, 6, kernel_size=(1, 3, 3), stride=(1, 2, 2))
-        self.layer4 = self._make_layer(BasicBlock, 8 * k, 3, kernel_size=(1, 3, 3), stride=(1, 2, 2))
+        self.layer2 = self._make_layer(BasicBlock, 2 * k, 3, kernel_size=(3, 3, 1), stride=2)
+        self.layer3 = self._make_layer(BasicBlock, 4 * k, 3, kernel_size=(3, 3, 1), stride=(2, 2, 1))
+        self.layer4 = self._make_layer(BasicBlock, 8 * k, 3, kernel_size=(3, 3, 1), stride=(2, 2, 1))
 
         self.class4 = DANetHead(8 * k, 8 * k)
 
         self.up3 = nn.Sequential(
-            nn.ConvTranspose3d(8 * k, 8 * k, kernel_size=(1, 2, 2), stride=(1, 2, 2)),
+            nn.ConvTranspose3d(8 * k, 8 * k, kernel_size=(2, 2, 1), stride=(2, 2, 1)),
             norm(8 * k),
             nn.ReLU(inplace=False)
         )
         self.class3 = nn.Sequential(
-            CBR(4 * k + 8 * k, 4 * k, (1, 3, 3))
+            CBR(4 * k + 8 * k, 4 * k, (3, 3, 1))
         )
 
         self.up2 = nn.Sequential(
-            nn.ConvTranspose3d(4 * k, 4 * k, kernel_size=(1, 2, 2), stride=(1, 2, 2)),
+            nn.ConvTranspose3d(4 * k, 4 * k, kernel_size=(2, 2, 1), stride=(2, 2, 1)),
             norm(4 * k),
             nn.ReLU(inplace=False)
         )
@@ -382,22 +382,37 @@ class DAResNet3d(nn.Module):
             nn.Conv3d(2 * k, classes, kernel_size=1, bias=False),
         )
 
+        self.map = nn.Sequential(
+            CBR(k + 2 * k, 2 * k),
+            nn.Conv3d(2 * k, 2 * k, kernel_size=1, bias=False),
+        )
+
     def forward(self, x):
         x_size = x.size()
 
         x = self.layer0(x)
+        print(x.size())
         x1 = self.layer1(x)
+        print(x1.size())
         x2 = self.layer2(x1)
+        print(x2.size())
         x3 = self.layer3(x2)
+        print(x3.size())
         x4 = self.class4(self.layer4(x3))
-
+        print(x4.size())
         x = self.class3(torch.cat([self.up3(x4), x3], 1))
+        print(x.size())
         x = self.class2(torch.cat([self.up2(x), x2], 1))
-        x = self.class1(torch.cat([self.up1(x), x1], 1))
-
-        x = F.interpolate(x, x_size[2:], mode='trilinear', align_corners=True)
-
-        return x
+        print(x.size())
+        x = torch.cat([self.up1(x), x1], 1)
+        out = self.class1(x)
+        map = self.map(x)
+        print(out.size())
+        print(map.size())
+        out = F.interpolate(out, x_size[2:], mode='trilinear', align_corners=True)
+        map = F.interpolate(map, x_size[2:], mode='trilinear', align_corners=True)
+        print(x.size())
+        return out, map
 
     def _make_layer(self, block, planes, blocks, kernel_size=(3, 3, 3), stride=1, dilation=1):
         layers = []

@@ -70,14 +70,14 @@ def process_MSD(root, task='Heart2', num_surf=5):
         img_ = iso_resample(img, [1.5, 1.5, 1.5], islabel=False)
         gt_ = iso_resample(gt, [1.5, 1.5, 1.5], islabel=True)
 
-        # normal
-        img_ = normalize(img_)
-
         # crop
         img_np = img_.numpy()
         gt_np = gt_.numpy()
         img_np = crop(img_np)
         gt_np = crop(gt_np)
+
+        # normal
+        img_np = normalize(img_np)
 
         # sample surf init
         for j in tqdm(range(num_surf)):
@@ -216,8 +216,8 @@ def main():
     proj_data_dir = '/home/zyuaq/mesh/MeshCNN/datasets/'
     task = 'Heart2'
     num_surf = 5
-    process_MSD(root, task, num_surf)
-    surf_preprocess(root, task)
+    # process_MSD(root, task, num_surf)
+    # surf_preprocess(root, task)
     split_list(root, num_surf, proj_data_dir)
 
 

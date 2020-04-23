@@ -1,11 +1,13 @@
 from models.mesh_classifier import RegresserModel
-from model import generate_model
 from data.dataloader import MSDSurfTrainDataset
 from util.writer import Writer
 import time
 from torch.utils.data import DataLoader
-from test import run_test
 from options.train_options import TrainOptions
+import torch
+import torch.nn as nn
+from losses.loss import DiceWithCELoss
+import numpy as np
 
 
 # train
@@ -14,8 +16,10 @@ def train(opt):
     dataloader = DataLoader(dataset)
     writer = Writer(opt)
 
-    seg_model = generate_model(opt)
-    mesh_model = RegresserModel(opt)
+    model = RegresserModel(opt)
+
+    seg_criterion = DiceWithCELoss()
+    mesh_criterion = nn.MSELoss()
 
     dataset_size = len(dataset)
     print('#training meshes = %d' % dataset_size)
@@ -33,8 +37,19 @@ def train(opt):
             total_steps += opt.batch_size
             epoch_iter += opt.batch_size
 
-            mesh_model.set_input(data)
-            mesh_model.optimize_parameters()
+            img_patch = torch.from_numpy(data['img_patch']).view(-1, 1, 128, 128, 64)
+            mask_patch = torch.from_numpy(data['mask_patch']).view(-1, 1, 128, 128, 64)
+            vs = torch.from_numpy(data['vs'])
+            meshes = data['mesh']
+            edges = torch.from_numpy(data['edge_features']).float()
+
+            img_patch = img_patch.cuda()
+            mask_patch = mask_patch.cuda()
+            edges = edges.cuda()
+            out_mask, out_map, out_edges = model(img_patch, edges, meshes)
+
+            seg_loss = seg_criterion(out_mask, mask_patch)
+            mesh_loss = mesh_criterion(out_edges, vs)
 
             if total_steps % opt.print_freq == 0:
                 loss = mesh_model.loss
