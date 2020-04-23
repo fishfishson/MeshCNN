@@ -11,12 +11,18 @@ import numpy as np
 from torch.optim import lr_scheduler
 
 
+def patch(img, ps):
+    assert len(img.shape) == 4
+    patches = img.unfold(1, ps[0], ps[0]).unfold(2, ps[1], ps[1]).unfold(3, ps[2], ps[2])
+    patches = patches.contiguous().view(-1, 1, ps[0], ps[1], ps[2])
+    return patches
+
+
 # train
 def train(opt):
+    ps = opt.patch_size
+
     dataloader = DataLoader(opt)
-
-    writer = Writer(opt)
-
     model = RegresserModel(opt)
 
     seg_criterion = DiceWithCELoss()
@@ -32,6 +38,8 @@ def train(opt):
     dataset_size = len(dataloader)
     print('#training meshes = %d' % dataset_size)
 
+    writer = Writer(opt)
+
     total_steps = 0
     for epoch in range(opt.epoch_count, opt.niter + opt.niter_decay + 1):
         epoch_start_time = time.time()
@@ -45,8 +53,11 @@ def train(opt):
             total_steps += opt.batch_size
             epoch_iter += opt.batch_size
 
-            img_patch = torch.from_numpy(data['img_patch']).float().view(-1, 1, 128, 128, 64)
-            mask_patch = torch.from_numpy(data['mask_patch']).long().view(-1, 1, 128, 128, 64)
+            img = torch.from_numpy(data['img']).float()
+            mask = torch.from_numpy(data['mask']).long()
+            img_patch = patch(img, ps)
+            mask_patch = patch(mask, ps)
+
             vs = torch.from_numpy(data['vs'])
             meshes = data['mesh']
             edge_fs = torch.from_numpy(data['edge_features']).float()

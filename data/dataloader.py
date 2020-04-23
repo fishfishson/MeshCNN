@@ -7,7 +7,6 @@ from data.base_dataset import BaseDataset
 import copy
 from models.layers.mesh import Mesh
 import open3d as o3d
-from util.util import pad
 
 
 class MSDTrainDataset(Dataset):
@@ -120,6 +119,7 @@ class MSDSurfTrainDataset(BaseDataset):
         self.opt = opt
         self.lst_path = opt.lst_path
         self.root = opt.dataroot
+        self.patch_size = opt.patch_size
 
         with open(self.lst_path, 'r') as f:
             self.file_lst = [line.strip() for line in f]
@@ -136,33 +136,14 @@ class MSDSurfTrainDataset(BaseDataset):
             self.init_surf_lst.append(ith_info[3])
 
         self.size = len(self.init_surf_lst)
-        zz, yy, xx = np.meshgrid([0, 1], [0, 1], [0, 1])
-        self.indices = np.vstack((128 * zz.flatten(), 128 * yy.flatten(), 64 * xx.flatten())).T
-
         self.get_mean_std()
         opt.input_nc = self.ninput_channels + opt.seg_inplanes * 2
 
-    def patch(self, idx):
+    def __getitem__(self, idx):
+        mesh = Mesh(self.init_surf_lst[idx], self.opt, True, self.opt.export_folder)
+        gt_surf = o3d.io.read_triangle_mesh(self.gt_surf_lst[idx])
         img = nib.load(self.img_lst[idx]).get_fdata()
         mask = nib.load(self.mask_lst[idx]).get_fdata()
-        img_patch = np.zeros((8, 1, 128, 128, 64))
-        mask_patch = np.zeros_like(img_patch)
-        for i in range(self.indices.shape[0]):
-            index = self.indices[i]
-            img_patch[i, :] = img[
-                              index[0]:index[0] + 128,
-                              index[1]:index[1] + 128,
-                              index[2]:index[2] + 64]
-            mask_patch[i, :] = mask[
-                               index[0]:index[0] + 128,
-                               index[1]:index[1] + 128,
-                               index[2]:index[2] + 64]
-        return img_patch, mask_patch
-
-    def __getitem__(self, idx):
-        mesh = Mesh(self.init_surf_lst[idx], self.opt, True, self.opt.export_folder)  # fill mesh ??
-        gt_surf = o3d.io.read_triangle_mesh(self.gt_surf_lst[idx])
-        img_patch, mask_patch = self.patch(idx)
 
         data = dict()
         data['mesh'] = mesh
@@ -170,8 +151,8 @@ class MSDSurfTrainDataset(BaseDataset):
         data['vs'] = copy.deepcopy(mesh.vs)
         data['edges'] = copy.deepcopy(mesh.edges)
         data['ve'] = copy.deepcopy(mesh.ve)
-        data['img_patch'] = img_patch
-        data['mask_patch'] = mask_patch
+        data['img'] = img
+        data['mask'] = mask
         edge_features = mesh.extract_features()
         data['edge_features'] = (edge_features - self.mean) / self.std
 

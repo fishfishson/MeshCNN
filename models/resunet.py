@@ -383,7 +383,7 @@ class DAResNet3d(nn.Module):
 
         self.map = nn.Sequential(
             CBR(k + 2 * k, 2 * k),
-            nn.Conv3d(2 * k, 2 * k, kernel_size=1, bias=False),
+            nn.Conv3d(2 * k, k, kernel_size=1, bias=False),
         )
 
     def forward(self, x):
