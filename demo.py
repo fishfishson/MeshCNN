@@ -27,4 +27,4 @@ dataloader = torch.utils.data.DataLoader(dataset,
 for i, data in enumerate(dataloader):
     if i == 0:
         break
-print(type(data))
+print(type(data[0]))
