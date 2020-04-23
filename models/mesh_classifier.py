@@ -179,12 +179,12 @@ class RegresserModel(nn.Module):
         patches = patches.permute(1, 0, 2, 3, 4)
         return patches
 
-    def forward(self, img_patch, edge_fs, edges, vs, meshes):
+    def forward(self, img_patch, edge_fs, edges, vs, mesh):
         out_mask, out_fmap = self.seg_net(img_patch)
         batch_fmap = self.unpatch(out_fmap)
         edge_fmap = self.add_feature(edges, batch_fmap, vs)
         edge_input = torch.cat([edge_fs, edge_fmap], dim=1)
-        edge_offset = self.mesh_net(edge_input, meshes)
+        edge_offset = self.mesh_net(edge_input, mesh)
         return out_mask, edge_offset
 
 

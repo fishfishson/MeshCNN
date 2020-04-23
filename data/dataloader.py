@@ -137,7 +137,7 @@ class MSDSurfTrainDataset(BaseDataset):
 
         self.size = len(self.init_surf_lst)
         self.get_mean_std()
-        opt.input_nc = self.ninput_channels + opt.seg_inplanes * 2
+        opt.input_nc = self.ninput_channels + opt.seg_inplanes
 
     def __getitem__(self, idx):
         mesh = Mesh(self.init_surf_lst[idx], self.opt, True, self.opt.export_folder)

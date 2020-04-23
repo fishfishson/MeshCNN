@@ -51,7 +51,7 @@ def train(opt):
             mask_patch = model.patch(mask)
 
             vs = torch.from_numpy(data['vs']).long()
-            meshes = data['mesh']
+            mesh = data['mesh']
             edge_fs = torch.from_numpy(data['edge_features']).float().cuda()
             gt_vs = torch.from_numpy(data['gt_vs']).float()
             edges = torch.from_numpy(data['edges']).long()
@@ -60,7 +60,7 @@ def train(opt):
             img_patch = img_patch.cuda()
             mask_patch = mask_patch.cuda()
             edge_fs = edge_fs.cuda()
-            out_mask, edge_offset = model(img_patch, edge_fs, edges, meshes, vs)
+            out_mask, edge_offset = model(img_patch, edge_fs, edges, vs, mesh)
 
             exit(0)
 
