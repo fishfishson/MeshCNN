@@ -136,10 +136,10 @@ class MSDSurfTrainDataset(BaseDataset):
             self.init_surf_lst.append(ith_info[3])
 
         self.size = len(self.init_surf_lst)
-        self.get_mean_std()
-
         zz, yy, xx = np.meshgrid([0, 1], [0, 1], [0, 1])
         self.indices = np.vstack((128 * zz.flatten(), 128 * yy.flatten(), 64 * xx.flatten())).T
+
+        self.get_mean_std()
 
     def patch(self, idx):
         img = nib.load(self.img_lst[idx]).get_fdata()
