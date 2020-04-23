@@ -21,6 +21,7 @@ class BaseOptions:
         self.parser.add_argument('--arch', type=str, default='meshunet', help='selects network to use') #todo add choices
         self.parser.add_argument('--resblocks', type=int, default=0, help='# of res blocks')
         self.parser.add_argument('--fc_n', type=int, default=100, help='# between fc and nclasses') #todo make generic
+        self.parser.add_argument('--input_nc', type=int, default=100, help='# between fc and nclasses') #todo make generic
         self.parser.add_argument('--ncf', nargs='+', default=[32,64,128,256], type=int, help='conv filters')
         self.parser.add_argument('--pool_res', nargs='+', default=[1800,1350,600], type=int, help='pooling res')
         self.parser.add_argument('--norm', type=str, default='batch',help='instance normalization or batch normalization or group normalization')
@@ -29,7 +30,6 @@ class BaseOptions:
         self.parser.add_argument('--init_gain', type=float, default=0.02, help='scaling factor for normal, xavier and orthogonal.')
         self.parser.add_argument('--nclasses', type=int, default=2, help='# of classes')
         self.parser.add_argument('--seg_inplanes', type=int, default=16, help='# of seg net inplanes')
-
         # general params
         self.parser.add_argument('--num_threads', default=3, type=int, help='# threads for loading data')
         self.parser.add_argument('--gpu_ids', type=str, default='0', help='gpu ids: e.g. 0  0,1,2, 0,2. use -1 for CPU')

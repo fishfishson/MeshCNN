@@ -7,7 +7,7 @@ from test import run_test
 
 if __name__ == '__main__':
     opt = TrainOptions().parse()
-    dataset = DataLoader( )
+    dataset = DataLoader(opt)
     dataset_size = len(dataset)
     print('#training meshes = %d' % dataset_size)
 
