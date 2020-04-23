@@ -123,15 +123,15 @@ if __name__ == '__main__':
     dataloader = DataLoader(opt)
     model = RegresserModel(opt)
 
-    if len(opt.gpu_ids) > 1:
-        model = model.cuda()
-        model = nn.DataParallel(model, device_ids=opt.gpu_ids)
-        net_dict = model.state_dict()
-    else:
-        os.environ["CUDA_VISIBLE_DEVICES"] = str(opt.gpu_ids[0])
-        model = model.cuda()
-        model = nn.DataParallel(model, device_ids=None)
-        net_dict = model.state_dict()
+    if not opt.no_cuda:
+        if len(opt.gpu_ids) > 1:
+            model = model.cuda()
+            model = nn.DataParallel(model, device_ids=opt.gpu_ids)
+            net_dict = model.state_dict()
+        else:
+            model = model.cuda()
+            model = nn.DataParallel(model, device_ids=None)
+            net_dict = model.state_dict()
 
     optimizer = torch.optim.Adam(model.parameters(), lr=opt.lr, betas=(0.9, 0.999), eps=1e-8, weight_decay=0.001)
     scheduler = get_scheduler(optimizer, opt)
