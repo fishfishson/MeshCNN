@@ -334,8 +334,10 @@ class DANetHead(nn.Module):
 
 class DAResNet3d(nn.Module):
 
-    def __init__(self, classes=2, k=16):
+    def __init__(self, opt):
         super(DAResNet3d, self).__init__()
+        k = opt.seg_inplanes
+        classes = opt.nclassess
 
         self.layer0 = nn.Sequential(OrderedDict([
             ('conv1', nn.Conv3d(1, k, kernel_size=3, stride=2, padding=1, bias=False)),
@@ -349,12 +351,12 @@ class DAResNet3d(nn.Module):
         self.layer1 = self._make_layer(BasicBlock, k, 3, kernel_size=(3, 3, 3), stride=1)
         self.layer2 = self._make_layer(BasicBlock, 2 * k, 3, kernel_size=(3, 3, 1), stride=2)
         self.layer3 = self._make_layer(BasicBlock, 4 * k, 3, kernel_size=(3, 3, 1), stride=(2, 2, 1))
-        self.layer4 = self._make_layer(BasicBlock, 8 * k, 3, kernel_size=(3, 3, 1), stride=(2, 2, 1))
+        self.layer4 = self._make_layer(BasicBlock, 8 * k, 3, kernel_size=(3, 3, 3), stride=(2, 2, 2))
 
         self.class4 = DANetHead(8 * k, 8 * k)
 
         self.up3 = nn.Sequential(
-            nn.ConvTranspose3d(8 * k, 8 * k, kernel_size=(2, 2, 1), stride=(2, 2, 1)),
+            nn.ConvTranspose3d(8 * k, 8 * k, kernel_size=(2, 2, 2), stride=(2, 2, 2)),
             norm(8 * k),
             nn.ReLU(inplace=False)
         )
