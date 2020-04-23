@@ -176,6 +176,7 @@ def patch(img, ps):
 
 def unpatch(patches, batch_size):
     size = patches.shape
+    print(size)
     channel = size[1]
     patches = patches.permute(1, 0, 2, 3, 4)
     patches = patches.reshape(channel, -1, 2, 2, 2, size[2], size[3], size[4])
