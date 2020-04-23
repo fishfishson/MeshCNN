@@ -13,7 +13,6 @@ from torch.optim import lr_scheduler
 
 # train
 def train(opt):
-    dataset = MSDSurfTrainDataset(opt)
     dataloader = DataLoader(opt)
 
     writer = Writer(opt)
@@ -30,7 +29,7 @@ def train(opt):
         return lr_l
     scheduler = lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda_rule)
 
-    dataset_size = len(dataset)
+    dataset_size = len(dataloader)
     print('#training meshes = %d' % dataset_size)
 
     total_steps = 0
@@ -59,6 +58,8 @@ def train(opt):
             mask_patch = mask_patch.cuda()
             edge_fs = edge_fs.cuda()
             out_mask, out_map, out_edges = model(img_patch, edge_fs, edges, meshes, vs)
+
+            exit(0)
 
             seg_loss = seg_criterion(out_mask, mask_patch)
             mesh_loss = mesh_criterion(out_edges, gt_vs, vs, ve)
