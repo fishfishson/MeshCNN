@@ -166,6 +166,9 @@ def split_list(root, num_surf, proj_data_dir):
     train_img = img_array[:n_train]
     train_gt = gt_array[:n_train]
     train_surf = surf_array[:n_train]
+    print(train_img)
+    print(train_gt)
+    print(train_surf)
 
     train_img = np.repeat(train_img, num_surf)
     train_gt = np.repeat(train_gt, num_surf)
@@ -178,8 +181,6 @@ def split_list(root, num_surf, proj_data_dir):
         train_gt_surf.append(train_gt_surf_i)
     train_gt_surf = np.repeat(np.array(train_gt_surf), num_surf)
     train_init_surf = np.array(train_init_surf)
-    print(train_gt_surf)
-    print(train_init_surf)
     assert train_gt_surf.shape[0] == train_init_surf.shape[0]
 
     test_img = img_array[n_train:]
@@ -213,7 +214,7 @@ def main():
     task = 'Heart2'
     num_surf = 5
     # process_MSD(root, task, num_surf)
-    surf_preprocess(root, task)
+    # surf_preprocess(root, task)
     split_list(root, num_surf, proj_data_dir)
 
 
