@@ -149,7 +149,7 @@ if __name__ == '__main__':
           model=model,
           optimizer=optimizer,
           scheduler=scheduler,
-          total_epochs=opt.nepochs,
+          total_epochs=opt.nepoch,
           save_interval=opt.save_intervals,
           save_dir=opt.save_dir,
           opt=opt)
