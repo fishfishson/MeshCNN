@@ -19,7 +19,7 @@ def parse_opts():
     parser.add_argument('--no_cuda', action='store_true', help='If true, cuda is not used.')
 
     # network params
-    parser.add_argument('--batch_size', type=int, default=2, help='input batch size')
+    parser.add_argument('--batch_size', type=int, default=4, help='input batch size')
     parser.add_argument('--arch', type=str, default='meshunet', help='selects network to use')  # todo add choices
     parser.add_argument('--resblocks', type=int, default=3, help='# of res blocks')
     parser.add_argument('--fc_n', type=int, default=100, help='# between fc and nclasses')  # todo make generic
@@ -61,7 +61,7 @@ def parse_opts():
                         help='frequency of running test in training script')
     parser.add_argument('--continue_train', action='store_true',
                         help='continue training: load the latest model')
-    parser.add_argument('--nepoch', type=int, default=20)
+    parser.add_argument('--nepoch', type=int, default=600)
     parser.add_argument('--save_intervals', type=int, default=10)
     parser.add_argument('--save_dir', type=str, default='./trails/models/mesh')
     parser.add_argument('--epoch_count', type=int, default=1,
