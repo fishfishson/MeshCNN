@@ -1,4 +1,4 @@
-from models.mesh_classifier import RegresserModel
+from models.mesh_classifier import RegresserModel, patch, unpatch
 import time
 from data import DataLoader
 from setting import parse_opts
@@ -29,8 +29,7 @@ def train(dataloader, model, optimizer, scheduler, total_epochs, save_interval, 
 
     train_time_sp = time.time()
     meter = AverageMeter()
-    dice = diceEval(opt.n_seg_classes)
-    val_dice = diceEval(opt.n_seg_classes)
+    dice = diceEval(opt.nclasses)
 
     for epoch in range(total_epochs):
 
@@ -41,7 +40,6 @@ def train(dataloader, model, optimizer, scheduler, total_epochs, save_interval, 
         log.info('lr = {}'.format(scheduler.get_lr()))
 
         dice.reset()
-        val_dice.reset()
         meter.reset()
 
         for batch_id, data in enumerate(dataloader):
@@ -51,8 +49,8 @@ def train(dataloader, model, optimizer, scheduler, total_epochs, save_interval, 
 
             img = torch.from_numpy(data['img']).float()
             mask = torch.from_numpy(data['mask']).long()
-            img_patch = model.patch(img)
-            mask_patch = model.patch(mask)
+            img_patch = patch(img, opt.patch_size)
+            mask_patch = patch(mask, opt.patch_size)
             img_patch = img_patch.unsqueeze(1)
 
             mesh = data['mesh']
