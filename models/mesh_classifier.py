@@ -134,7 +134,7 @@ class ClassifierModel:
 class RegresserModel(nn.Module):
     def __init__(self, opt):
         super(RegresserModel, self).__init__()
-        self.seg_net = DAResNet3d(opt)
+        self.seg_net = DAResNet3d(opt.nclasses, opt.seg_inplanes)
         self.down_convs = [opt.input_nc] + opt.ncf
         self.up_convs = opt.ncf[::-1] + [1]
         self.pool_res = [opt.ninput_edges] + opt.pool_res
