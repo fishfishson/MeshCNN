@@ -320,27 +320,16 @@ class DAResNet3d(nn.Module):
 
     def forward(self, x):
         x_size = x.size()
-
         x = self.layer0(x)
-        print(x.shape)
         x1 = self.layer1(x)
-        print(x1.shape)
         x2 = self.layer2(x1)
-        print(x2.shape)
         x3 = self.layer3(x2)
-        print(x3.shape)
         x4 = self.class4(self.layer4(x3))
-        print(x4.shape)
         x = self.class3(torch.cat([self.up3(x4), x3], 1))
-        print(x.shape)
         x = self.class2(torch.cat([self.up2(x), x2], 1))
-        print(x.shape)
         x = torch.cat([self.up1(x), x1], 1)
-        print(x.shape)
         out = self.class1(x)
-        print(out.shape)
         fmap = self.map(x)
-        print(fmap.shape)
         out = F.interpolate(out, x_size[2:], mode='trilinear', align_corners=True)
         fmap = F.interpolate(fmap, x_size[2:], mode='trilinear', align_corners=True)
         return out, fmap
@@ -357,7 +346,7 @@ class DAResNet3d(nn.Module):
     def _init_weight(self):
         for m in self.modules():
             if isinstance(m, nn.Conv3d):
-                torch.nn.init.kaiming_normal_(m.weight, mode='fan_out')
+                torch.nn.init.kaiming_normal_(m.weight, mode='fan_in')
             elif isinstance(m, nn.BatchNorm3d):
                 torch.nn.init.constant_(m.weight, 1)
                 torch.nn.init.constant_(m.bias, 0)

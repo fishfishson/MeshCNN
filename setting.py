@@ -19,7 +19,7 @@ def parse_opts():
     parser.add_argument('--no_cuda', action='store_true', help='If true, cuda is not used.')
 
     # network params
-    parser.add_argument('--batch_size', type=int, default=8, help='input batch size')
+    parser.add_argument('--batch_size', type=int, default=2, help='input batch size')
     parser.add_argument('--arch', type=str, default='meshunet', help='selects network to use')  # todo add choices
     parser.add_argument('--resblocks', type=int, default=3, help='# of res blocks')
     parser.add_argument('--fc_n', type=int, default=100, help='# between fc and nclasses')  # todo make generic
