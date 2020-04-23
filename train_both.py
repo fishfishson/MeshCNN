@@ -1,4 +1,4 @@
-from models.mesh_classifier import RegresserModel, patch, unpatch
+from models.mesh_classifier import RegresserModel, patch
 import time
 from data import DataLoader
 from setting import parse_opts
