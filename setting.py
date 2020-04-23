@@ -19,7 +19,6 @@ def parse_opts():
     parser.add_argument('--no_cuda', action='store_true', help='If true, cuda is not used.')
 
     # network params
-
     parser.add_argument('--batch_size', type=int, default=8, help='input batch size')
     parser.add_argument('--arch', type=str, default='meshunet', help='selects network to use')  # todo add choices
     parser.add_argument('--resblocks', type=int, default=3, help='# of res blocks')
@@ -85,6 +84,6 @@ def parse_opts():
                         help='percent vertices which will be shifted along the mesh surface')
     parser.add_argument('--flip_edges', type=float, default=0, help='percent of edges to randomly flip')
 
-    args = parser.parse_args()
+    args = parser.parse_args(args=[])
 
     return args
