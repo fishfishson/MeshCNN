@@ -13,7 +13,6 @@ def collate_fn(batch):
     """
     meta = {}
     keys = batch[0].keys()
-    print(keys)
     for key in keys:
         meta.update({key: np.array([d[key] for d in batch])})
     return meta
@@ -27,4 +26,4 @@ dataloader = torch.utils.data.DataLoader(dataset,
 for i, data in enumerate(dataloader):
     if i == 0:
         break
-print(type(data[0]))
+print(data[0]['image_patch'][0])
