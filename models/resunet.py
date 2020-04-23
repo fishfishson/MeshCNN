@@ -404,8 +404,6 @@ class DAResNet3d(nn.Module):
 
         out = F.interpolate(out, x_size[2:], mode='trilinear', align_corners=True)
         fmap = F.interpolate(fmap, x_size[2:], mode='trilinear', align_corners=True)
-        print(out.size())
-        print(fmap.size())
         return out, fmap
 
     def _make_layer(self, block, planes, blocks, kernel_size=(3, 3, 3), stride=1, dilation=1):

@@ -176,11 +176,11 @@ class RegresserModel(nn.Module):
         return edges_map
 
     def forward(self, img_patch, edge_fs, edges, meshes, vs):
-        out_mask, out_map = self.seg_net(img_patch)
-        edges_map = self.add_feature(edges, out_map, vs)
-        edges_input = torch.cat([edge_fs, edges_map], dim=1)
-        out_edges = self.mesh_net(edges_input, meshes)
-        return out_mask, out_map, out_edges
+        out_mask, out_fmap = self.seg_net(img_patch)
+        return out_mask, out_fmap
+        # edges_map = self.add_feature(edges, out_fmap, vs)
+        # edges_input = torch.cat([edge_fs, edges_map], dim=1)
+        # out_edges = self.mesh_net(edges_input, meshes)
 
 
 class SurfLoss(nn.Module):
