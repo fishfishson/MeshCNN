@@ -333,7 +333,6 @@ class DANetHead(nn.Module):
 
 
 class DAResNet3d(nn.Module):
-
     def __init__(self, classes=2, k=16):
         super(DAResNet3d, self).__init__()
 
@@ -391,27 +390,22 @@ class DAResNet3d(nn.Module):
         x_size = x.size()
 
         x = self.layer0(x)
-        print(x.size())
         x1 = self.layer1(x)
-        print(x1.size())
         x2 = self.layer2(x1)
-        print(x2.size())
         x3 = self.layer3(x2)
-        print(x3.size())
         x4 = self.class4(self.layer4(x3))
-        print(x4.size())
+
         x = self.class3(torch.cat([self.up3(x4), x3], 1))
-        print(x.size())
         x = self.class2(torch.cat([self.up2(x), x2], 1))
-        print(x.size())
         x = torch.cat([self.up1(x), x1], 1)
+
         out = self.class1(x)
         map = self.map(x)
-        print(out.size())
-        print(map.size())
+
         out = F.interpolate(out, x_size[2:], mode='trilinear', align_corners=True)
         map = F.interpolate(map, x_size[2:], mode='trilinear', align_corners=True)
-        print(x.size())
+        print(out.size)
+        print(map.size)
         return out, map
 
     def _make_layer(self, block, planes, blocks, kernel_size=(3, 3, 3), stride=1, dilation=1):

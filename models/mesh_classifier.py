@@ -203,4 +203,3 @@ class SurfLoss(nn.Module):
                 offset = torch.mean(e_f)
                 loss += self.l2_loss(v[j] + offset, gt_v[j])
         return loss
-
