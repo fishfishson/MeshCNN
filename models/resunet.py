@@ -400,13 +400,13 @@ class DAResNet3d(nn.Module):
         x = torch.cat([self.up1(x), x1], 1)
 
         out = self.class1(x)
-        map = self.map(x)
+        fmap = self.map(x)
 
         out = F.interpolate(out, x_size[2:], mode='trilinear', align_corners=True)
-        map = F.interpolate(map, x_size[2:], mode='trilinear', align_corners=True)
-        print(out.size)
-        print(map.size)
-        return out, map
+        fmap = F.interpolate(fmap, x_size[2:], mode='trilinear', align_corners=True)
+        print(out.size())
+        print(fmap.size())
+        return out, fmap
 
     def _make_layer(self, block, planes, blocks, kernel_size=(3, 3, 3), stride=1, dilation=1):
         layers = []
