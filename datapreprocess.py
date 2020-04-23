@@ -107,8 +107,8 @@ def surf_preprocess(root, task='Heart2'):
     temp_mesh = o3d.io.read_triangle_mesh(os.path.join(root, task, 'temp.obj'))
     temp_pts = np.asarray(temp_mesh.vertices)
 
-    temp_aligned_surfs = align_shape(temp_pts, gt_surf_list)
-    temp_aligned_init_surfs = align_shape(temp_pts, init_surf_list)
+    temp_aligned_surfs = align_shape(temp_pts, gt_surf_list[:2])
+    temp_aligned_init_surfs = align_shape(temp_pts, init_surf_list[:2])
 
     for i in range(temp_aligned_surfs.shape[0]):
         temp_aligned_surf = npcvtobj(temp_mesh, temp_aligned_surfs[i])
@@ -211,7 +211,7 @@ def main():
     task = 'Heart2'
     num_surf = 5
     # process_MSD(root, task, num_surf)
-    # surf_preprocess(root, task)
+    surf_preprocess(root, task)
     split_list(root, num_surf, proj_data_dir)
 
 
