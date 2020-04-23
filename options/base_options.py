@@ -14,7 +14,7 @@ class BaseOptions:
         self.parser.add_argument('--lst_path', default='datasets/train_list.txt', help='path to dataset file list')
         self.parser.add_argument('--dataroot', default='datasets', help='path to model data dir')
         self.parser.add_argument('--dataset_mode', choices={"classification", "segmentation"}, default='segmentation')
-        self.parser.add_argument('--ninput_edges', type=int, default=2280, help='# of input edges (will include dummy edges)')
+        self.parser.add_argument('--ninput_edges', type=int, default=3000, help='# of input edges (will include dummy edges)')
         self.parser.add_argument('--max_dataset_size', type=int, default=float("inf"), help='Maximum number of samples per epoch')
         # network params
         self.parser.add_argument('--batch_size', type=int, default=16, help='input batch size')

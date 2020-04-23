@@ -172,7 +172,6 @@ class MSDSurfTrainDataset(BaseDataset):
         data['img_patch'] = img_patch
         data['mask_patch'] = mask_patch
         edge_features = mesh.extract_features()
-        edge_features = pad(edge_features, self.opt.ninput_edges)
         data['edge_features'] = (edge_features - self.mean) / self.std
 
         return data
