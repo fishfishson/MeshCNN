@@ -11,17 +11,8 @@ import numpy as np
 from torch.optim import lr_scheduler
 
 
-def patch(img, ps):
-    assert len(img.shape) == 4
-    patches = img.unfold(1, ps[0], ps[0]).unfold(2, ps[1], ps[1]).unfold(3, ps[2], ps[2])
-    patches = patches.contiguous().view(-1, 1, ps[0], ps[1], ps[2])
-    return patches
-
-
 # train
 def train(opt):
-    ps = opt.patch_size
-
     dataloader = DataLoader(opt)
     model = RegresserModel(opt)
 
@@ -33,6 +24,7 @@ def train(opt):
     def lambda_rule(epoch):
         lr_l = 1.0 - max(0, epoch + 1 + opt.epoch_count - opt.niter) / float(opt.niter_decay + 1)
         return lr_l
+
     scheduler = lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda_rule)
 
     dataset_size = len(dataloader)
@@ -55,12 +47,12 @@ def train(opt):
 
             img = torch.from_numpy(data['img']).float()
             mask = torch.from_numpy(data['mask']).long()
-            img_patch = patch(img, ps)
-            mask_patch = patch(mask, ps)
+            img_patch = model.patch(img)
+            mask_patch = model.patch(mask)
 
-            vs = torch.from_numpy(data['vs'])
+            vs = torch.from_numpy(data['vs']).long()
             meshes = data['mesh']
-            edge_fs = torch.from_numpy(data['edge_features']).float()
+            edge_fs = torch.from_numpy(data['edge_features']).float().cuda()
             gt_vs = torch.from_numpy(data['gt_vs']).float()
             edges = torch.from_numpy(data['edges']).long()
             ve = data['ve']
@@ -68,7 +60,7 @@ def train(opt):
             img_patch = img_patch.cuda()
             mask_patch = mask_patch.cuda()
             edge_fs = edge_fs.cuda()
-            out_mask, out_map, out_edges = model(img_patch, edge_fs, edges, meshes, vs)
+            out_mask, edge_offset = model(img_patch, edge_fs, edges, meshes, vs)
 
             exit(0)
 
