@@ -63,7 +63,7 @@ def parse_opts():
                         help='continue training: load the latest model')
     parser.add_argument('--nepoch', type=int, default=20)
     parser.add_argument('--save_intervals', type=int, default=10)
-    parser.add_argument('--save_dir', type=str, default='./datasets')
+    parser.add_argument('--save_dir', type=str, default='./trails/models/mesh')
     parser.add_argument('--epoch_count', type=int, default=1,
                         help='the starting epoch count, we save the model by <epoch_count>, <epoch_count>+<save_latest_freq>, ...')
     parser.add_argument('--phase', type=str, default='train', help='train, val, test, etc')
