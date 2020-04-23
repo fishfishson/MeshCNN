@@ -14,6 +14,9 @@ class TrainOptions(BaseOptions):
                                  help='frequency of running test in training script')
         self.parser.add_argument('--continue_train', action='store_true',
                                  help='continue training: load the latest model')
+        self.parser.add_argument('--nepoch', type=int, default=1000)
+        self.parser.add_argument('--save_intervals', type=int, default=10)
+        self.parser.add_argument('--save_dir', type=str, default='./datasets')
         self.parser.add_argument('--epoch_count', type=int, default=1,
                                  help='the starting epoch count, we save the model by <epoch_count>, <epoch_count>+<save_latest_freq>, ...')
         self.parser.add_argument('--phase', type=str, default='train', help='train, val, test, etc')

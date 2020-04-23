@@ -23,7 +23,7 @@ class DataLoader:
             self.dataset,
             batch_size=opt.batch_size,
             shuffle=not opt.serial_batches,
-            num_workers=int(opt.num_threads),
+            num_workers=opt.num_workers,
             collate_fn=collate_fn)
 
     def __len__(self):

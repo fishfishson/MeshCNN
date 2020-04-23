@@ -32,7 +32,7 @@ class BaseOptions:
         self.parser.add_argument('--norm', type=str, default='batch',
                                  help='instance normalization or batch normalization or group normalization')
         self.parser.add_argument('--num_groups', type=int, default=16, help='# of groups for groupnorm')
-        self.parser.add_argument('--init_type', type=str, default='normal',
+        self.parser.add_argument('--init_type', type=str, default='kaiming',
                                  help='network initialization [normal|xavier|kaiming|orthogonal]')
         self.parser.add_argument('--init_gain', type=float, default=0.02,
                                  help='scaling factor for normal, xavier and orthogonal.')

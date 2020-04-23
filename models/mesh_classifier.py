@@ -4,8 +4,6 @@ import torch.nn as nn
 from os.path import join
 from util.util import seg_accuracy, print_network
 from models.resunet import DAResNet3d
-from losses.loss import DiceWithCELoss
-import numpy as np
 
 
 class ClassifierModel:
@@ -137,7 +135,7 @@ class RegresserModel(nn.Module):
         self.opt = opt
         self.seg_net = DAResNet3d(opt.nclasses, opt.seg_inplanes)
         self.down_convs = [opt.input_nc] + opt.ncf
-        self.up_convs = opt.ncf[::-1] + [1]
+        self.up_convs = opt.ncf[::-1] + [3]
         self.pool_res = [opt.ninput_edges] + opt.pool_res
         self.mesh_net = networks.MeshEncoderDecoder(self.pool_res,
                                                     self.down_convs,
@@ -145,35 +143,33 @@ class RegresserModel(nn.Module):
                                                     blocks=opt.resblocks,
                                                     transfer_data=True)
 
-    def add_feature(self, edges, batch_fmap, vs):
+    def add_feature(self, edges, fmap, vs):
         b = self.opt.batch_size
         k = self.opt.seg_inplanes
         n_e = edges.shape[1]
         edges_map = torch.zeros((b, k, n_e)).float().cuda()
         for i in range(b):
-            fmap = batch_fmap[i]
-            v1_ids = edges[i, :, 0]
-            v2_ids = edges[i, :, 1]
-            v1 = vs[i, v1_ids]
-            v2 = vs[i, v2_ids]
-            fmap_v1 = fmap[:, v1[:, 0], v1[:, 1], v1[:, 2]]
-            fmap_v2 = fmap[:, v2[:, 0], v2[:, 1], v2[:, 2]]
-            edges_map[i] = (fmap_v1 + fmap_v2) / 2
-
+            edge = edges[i]
+            v = vs[i]
+            v1 = v[edge[:, 0]]
+            v2 = v[edge[:, 1]]
+            fmap_1 = fmap[i, :, v1[:, 0], v1[:, 1], v1[:, 2]]
+            fmap_2 = fmap[i, :, v2[:, 0], v2[:, 1], v2[:, 2]]
+            edges_map[i] = (fmap_1 + fmap_2) / 2
         return edges_map
 
     def patch(self, img):
         ps = self.opt.patch_size
         assert len(img.shape) == 4
         patches = img.unfold(1, ps[0], ps[0]).unfold(2, ps[1], ps[1]).unfold(3, ps[2], ps[2])
-        patches = patches.contiguous().view(-1, 1, ps[0], ps[1], ps[2])
+        patches = patches.contiguous().view(-1, ps[0], ps[1], ps[2])
         return patches
 
     def unpatch(self, patches):
         size = patches.size()
         channel = size[1]
         patches = patches.permute(1, 0, 2, 3, 4)
-        patches = patches.view(channel, -1, 2, 2, 2, size[2], size[3], size[4])
+        patches = patches.reshape(channel, -1, 2, 2, 2, size[2], size[3], size[4])
         patches = patches.permute(0, 1, 2, 5, 3, 6, 4, 7)
         patches = patches.reshape(channel, self.opt.batch_size, 2 * size[2], 2 * size[3], 2 * size[4])
         patches = patches.permute(1, 0, 2, 3, 4)
@@ -181,30 +177,8 @@ class RegresserModel(nn.Module):
 
     def forward(self, img_patch, edge_fs, edges, vs, mesh):
         out_mask, out_fmap = self.seg_net(img_patch)
-        batch_fmap = self.unpatch(out_fmap)
-        edge_fmap = self.add_feature(edges, batch_fmap, vs)
-        edge_input = torch.cat([edge_fs, edge_fmap], dim=1)
-        edge_offset = self.mesh_net(edge_input, mesh)
-        return out_mask, edge_offset
-
-
-class SurfLoss(nn.Module):
-    def __init__(self):
-        super(SurfLoss, self).__init__()
-        self.l2_loss = nn.MSELoss()
-
-    def forward(self, out_edges, gt_vs, vs, ve):
-        n_b = out_edges.size(0)
-        loss = 0
-        for i in range(n_b):
-            v = vs[i]
-            gt_v = gt_vs[i]
-            es = ve[i]
-            out_edge = out_edges[i]
-            n_v = v.shape[0]
-            for j in range(n_v):
-                e = es[j]
-                e_f = out_edge[0, e]
-                offset = torch.mean(e_f)
-                loss += self.l2_loss(v[j] + offset, gt_v[j])
-        return loss
+        fmap = self.unpatch(out_fmap)
+        edge_fmaps = self.add_feature(edges, fmap, vs)
+        edge_inputs = torch.cat([edge_fs, edge_fmaps], dim=1)
+        edge_offsets = self.mesh_net(edge_inputs, mesh)
+        return out_mask, edge_offsets

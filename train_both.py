@@ -1,112 +1,149 @@
-from models.mesh_classifier import RegresserModel, SurfLoss
-from data.dataloader import MSDSurfTrainDataset
-from util.writer import Writer
+from models.mesh_classifier import RegresserModel
 import time
 from data import DataLoader
-from options.train_options import TrainOptions
+from setting import parse_opts
 import torch
 import torch.nn as nn
 from losses.loss import DiceWithCELoss
-import numpy as np
-from torch.optim import lr_scheduler
+from util.logger import log
+from metrics.DiceEval import diceEval, AverageMeter
+import os
+from models.networks import get_scheduler
 
 
 # train
-def train(opt):
-    dataloader = DataLoader(opt)
-    model = RegresserModel(opt)
+def train(dataloader, model, optimizer, scheduler, total_epochs, save_interval, save_dir, opt):
+    batches_per_epoch = len(dataloader)
+    log.info('{} epochs in total, {} batches per epoch'.format(total_epochs, batches_per_epoch))
+
+    print("Current setting is:")
+    print(opt)
+    print("\n\n")
 
     seg_criterion = DiceWithCELoss()
-    mesh_criterion = SurfLoss()
+    mesh_criterion = nn.MSELoss()
 
-    optimizer = torch.optim.Adam(model.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
+    if not opt.no_cuda:
+        seg_criterion = seg_criterion.cuda()
+        mesh_criterion = mesh_criterion.cuda()
 
-    def lambda_rule(epoch):
-        lr_l = 1.0 - max(0, epoch + 1 + opt.epoch_count - opt.niter) / float(opt.niter_decay + 1)
-        return lr_l
+    train_time_sp = time.time()
+    meter = AverageMeter()
+    dice = diceEval(opt.n_seg_classes)
+    val_dice = diceEval(opt.n_seg_classes)
 
-    scheduler = lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda_rule)
+    for epoch in range(total_epochs):
 
-    dataset_size = len(dataloader)
-    print('#training meshes = %d' % dataset_size)
+        model.train()
 
-    writer = Writer(opt)
+        log.info('Start epoch {}'.format(epoch))
 
-    total_steps = 0
-    for epoch in range(opt.epoch_count, opt.niter + opt.niter_decay + 1):
-        epoch_start_time = time.time()
-        iter_data_time = time.time()
-        epoch_iter = 0
+        log.info('lr = {}'.format(scheduler.get_lr()))
 
-        for i, data in enumerate(dataloader):
-            iter_start_time = time.time()
-            if total_steps % opt.print_freq == 0:
-                t_data = iter_start_time - iter_data_time
-            total_steps += opt.batch_size
-            epoch_iter += opt.batch_size
+        dice.reset()
+        val_dice.reset()
+        meter.reset()
+
+        for batch_id, data in enumerate(dataloader):
+            batch_id_sp = epoch * batches_per_epoch
+
+            optimizer.zero_grad()
 
             img = torch.from_numpy(data['img']).float()
             mask = torch.from_numpy(data['mask']).long()
             img_patch = model.patch(img)
             mask_patch = model.patch(mask)
+            img_patch = img_patch.unsqueeze(1)
 
-            vs = torch.from_numpy(data['vs']).long()
             mesh = data['mesh']
-            edge_fs = torch.from_numpy(data['edge_features']).float().cuda()
-            gt_vs = torch.from_numpy(data['gt_vs']).float()
-            edges = torch.from_numpy(data['edges']).long()
+            edges = data['edges']
             ve = data['ve']
 
             img_patch = img_patch.cuda()
             mask_patch = mask_patch.cuda()
-            edge_fs = edge_fs.cuda()
-            out_mask, edge_offset = model(img_patch, edge_fs, edges, vs, mesh)
 
-            exit(0)
+            vs = data['vs'].astype('int')
+            edge_fs = torch.from_numpy(data['edge_features']).float().cuda()
+            gt_vs = torch.from_numpy(data['gt_vs']).float().cuda()
+            vtx = torch.from_numpy(vs).float().cuda()
+
+            out_mask, edge_offsets = model(img_patch, edge_fs, edges, vs, mesh)
+            n_v = vs.shape[0]
+            for i in range(opt.batch_size):
+                for j in range(n_v):
+                    e = ve[i, j]
+                    edge_offset = edge_offsets[i, :, e]
+                    offset = torch.mean(edge_offset, dim=1)
+                    vtx[i, j] += offset
 
             seg_loss = seg_criterion(out_mask, mask_patch)
-            mesh_loss = mesh_criterion(out_edges, gt_vs, vs, ve)
+            mesh_loss = mesh_criterion(vtx, gt_vs)
             loss = 0.5 * seg_loss + mesh_loss
-
-            optimizer.zero_grad()
             loss.backward()
+
             optimizer.step()
 
-        scheduler.step(epoch)
-        lr = optimizer.param_groups[0]['lr']
-        print('learning rate = %.7f' % lr)
+            meter.update(loss.item())
+            dice.addBatch(out_mask.max(1)[1], mask_patch)
 
-        if total_steps % opt.print_freq == 0:
-            loss = mesh_model.loss
-            t = (time.time() - iter_start_time) / opt.batch_size
-            writer.print_current_losses(epoch, epoch_iter, loss, t, t_data)
-            writer.plot_loss(loss, epoch, epoch_iter, dataset_size)
+            avg_batch_time = (time.time() - train_time_sp) / (1 + batch_id_sp)
+            log.info(
+                'Batch: {}-{} ({}), loss = {:.3f}, dice = {:.3f}, avg_batch_time = {:.3f}' \
+                    .format(epoch, batch_id, batch_id_sp, meter.avg, dice.getMetric(), avg_batch_time))
 
-        if i % opt.save_latest_freq == 0:
-            print('saving the latest model (epoch %d, total_steps %d)' %
-                  (epoch, total_steps))
-            mesh_model.save_network('latest')
+            if batch_id == 0 and batch_id_sp != 0 and batch_id_sp % save_interval == 0:
+                model_save_path = '{}_epoch_{}_batch_{}.pth.tar'.format(save_dir, epoch, batch_id)
+                model_save_dir = os.path.dirname(model_save_path)
+                if not os.path.exists(model_save_dir):
+                    os.makedirs(model_save_dir)
 
-            iter_data_time = time.time()
-        if epoch % opt.save_epoch_freq == 0:
-            print('saving the model at the end of epoch %d, iters %d' %
-                  (epoch, total_steps))
-            mesh_model.save_network('latest')
-            mesh_model.save_network(epoch)
+                log.info('Save checkpoints: epoch = {}, batch_id = {}'.format(epoch, batch_id))
+                torch.save({
+                    'epoch': epoch,
+                    'batch_id': batch_id,
+                    'state_dict': model.state_dict(),
+                    'optimizer': optimizer.state_dict()},
+                    model_save_path)
 
-        print('End of epoch %d / %d \t Time Taken: %d sec' %
-              (epoch, opt.niter + opt.niter_decay, time.time() - epoch_start_time))
-        mesh_model.update_learning_rate()
-        if opt.verbose_plot:
-            writer.plot_model_wts(mesh_model, epoch)
+        scheduler.step()
 
-        if epoch % opt.run_test_freq == 0:
-            acc = run_test(epoch)
-            writer.plot_acc(acc, epoch)
-
-    writer.close()
+    print('Finished training')
 
 
 if __name__ == '__main__':
-    opt = TrainOptions().parse()
-    train(opt)
+    opt = parse_opts()
+    torch.manual_seed(opt.seed)
+
+    dataloader = DataLoader(opt)
+    model = RegresserModel(opt)
+
+    if len(opt.gpu_ids) > 1:
+        model = model.cuda()
+        model = nn.DataParallel(model, device_ids=opt.gpu_ids)
+        net_dict = model.state_dict()
+    else:
+        os.environ["CUDA_VISIBLE_DEVICES"] = str(opt.gpu_ids[0])
+        model = model.cuda()
+        model = nn.DataParallel(model, device_ids=None)
+        net_dict = model.state_dict()
+
+    optimizer = torch.optim.Adam(model.parameters(), lr=opt.lr, betas=(0.9, 0.999), eps=1e-8, weight_decay=0.001)
+    scheduler = get_scheduler(optimizer, opt)
+
+    if opt.resume_path:
+        if os.path.isfile(opt.resume_path):
+            print("=> loading checkpoint '{}'".format(opt.resume_path))
+            checkpoint = torch.load(opt.resume_path)
+            model.load_state_dict(checkpoint['state_dict'])
+            optimizer.load_state_dict(checkpoint['optimizer'])
+            print("=> loaded checkpoint '{}' (epoch {})"
+                  .format(opt.resume_path, checkpoint['epoch']))
+
+    train(dataloader=dataloader,
+          model=model,
+          optimizer=optimizer,
+          scheduler=scheduler,
+          total_epochs=opt.nepochs,
+          save_interval=opt.save_intervals,
+          save_dir=opt.save_dir,
+          opt=opt)

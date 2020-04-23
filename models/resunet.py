@@ -215,76 +215,6 @@ class UNet(nn.Module):
         return output
 
 
-class ResUNet(nn.Module):
-
-    def __init__(self, segClasses=2, k=16, psp=True):
-        super(ResUNet, self).__init__()
-
-        self.layer0 = CBR(1, k, stride=2, dilation=1)
-        self.class0 = nn.Sequential(
-            BasicBlock(k + 2 * k, 2 * k),
-            nn.Conv3d(2 * k, segClasses, kernel_size=1, bias=False)
-        )
-
-        self.pool1 = DownSample(k, k, 'max')
-        self.layer1 = nn.Sequential(
-            BasicBlock(k, 2 * k),
-            BasicBlock(2 * k, 2 * k)
-        )
-        # self.br_1 = BR(k+2*k)
-        self.class1 = nn.Sequential(
-            BasicBlock(2 * k + 4 * k, 4 * k),
-            CBR(4 * k, 2 * k, dilation=1)
-        )
-
-        self.pool2 = DownSample(2 * k, 2 * k, 'max')
-        self.layer2 = nn.Sequential(
-            BasicBlock(2 * k, 4 * k),
-            BasicBlock(4 * k, 4 * k)
-        )
-
-        self.class2 = nn.Sequential(
-            BasicBlock(4 * k + 8 * k, 8 * k),
-            CBR(8 * k, 4 * k, dilation=1)
-        )
-
-        self.pool3 = DownSample(4 * k, 4 * k, 'max')
-        self.layer3 = nn.Sequential(
-            BasicBlock(4 * k, 8 * k, dilation=1),
-            BasicBlock(8 * k, 8 * k, dilation=2),
-            BasicBlock(8 * k, 8 * k, dilation=4)
-        )
-        # self.br_3 = BR(7*k+8*k)
-        sizes = ((1, 1, 1), (2, 2, 2), (3, 3, 3), (6, 6, 6))
-        self.class3 = PSPModule(8 * k, 8 * k, sizes) if psp else CBR(8 * k, 8 * k, dilation=1)
-
-        self.up1 = nn.Upsample(scale_factor=2, mode='trilinear')
-        self.up2 = nn.Upsample(scale_factor=2, mode='trilinear')
-        self.up3 = nn.Upsample(scale_factor=2, mode='trilinear')
-
-    def forward(self, x):
-        # pdb.set_trace()
-        output0 = self.layer0(x)
-        output1_0 = self.pool1(output0)
-        output1 = self.layer1(output1_0)
-
-        output2_0 = self.pool2(output1)
-        output2 = self.layer2(output2_0)
-
-        output3_0 = self.pool3(output2)
-        output3 = self.layer3(output3_0)
-
-        output = self.class3(output3)
-        output = self.up3(output)
-        output = self.class2(torch.cat([output2, output], 1))
-        output = self.up2(output)
-        output = self.class1(torch.cat([output1, output], 1))
-        output = self.up1(output)
-        output = self.class0(torch.cat([output0, output], 1))
-
-        return output
-
-
 class DANetHead(nn.Module):
     def __init__(self, in_channels, out_channels):
         super(DANetHead, self).__init__()
@@ -386,22 +316,31 @@ class DAResNet3d(nn.Module):
             nn.Conv3d(2 * k, k, kernel_size=1, bias=False),
         )
 
+        self._init_weight()
+
     def forward(self, x):
         x_size = x.size()
 
         x = self.layer0(x)
+        print(x.shape)
         x1 = self.layer1(x)
+        print(x1.shape)
         x2 = self.layer2(x1)
+        print(x2.shape)
         x3 = self.layer3(x2)
+        print(x3.shape)
         x4 = self.class4(self.layer4(x3))
-
+        print(x4.shape)
         x = self.class3(torch.cat([self.up3(x4), x3], 1))
+        print(x.shape)
         x = self.class2(torch.cat([self.up2(x), x2], 1))
+        print(x.shape)
         x = torch.cat([self.up1(x), x1], 1)
-
+        print(x.shape)
         out = self.class1(x)
+        print(out.shape)
         fmap = self.map(x)
-
+        print(fmap.shape)
         out = F.interpolate(out, x_size[2:], mode='trilinear', align_corners=True)
         fmap = F.interpolate(fmap, x_size[2:], mode='trilinear', align_corners=True)
         return out, fmap
@@ -414,6 +353,14 @@ class DAResNet3d(nn.Module):
             layers.append(block(self.inplanes, planes, kernel_size=kernel_size))
 
         return nn.Sequential(*layers)
+
+    def _init_weight(self):
+        for m in self.modules():
+            if isinstance(m, nn.Conv3d):
+                torch.nn.init.kaiming_normal_(m.weight, mode='fan_out')
+            elif isinstance(m, nn.BatchNorm3d):
+                torch.nn.init.constant_(m.weight, 1)
+                torch.nn.init.constant_(m.bias, 0)
 
 
 class DAResUNet(nn.Module):
@@ -457,7 +404,6 @@ class DAResUNet(nn.Module):
             BasicBlock(8 * k, 8 * k, dilation=4)
         )
 
-        sizes = ((1, 1, 1), (2, 2, 2), (3, 3, 3), (6, 6, 6))
         self.class3 = DANetHead(8 * k, 8 * k)
 
         self.up1 = nn.Upsample(scale_factor=2, mode='trilinear')
