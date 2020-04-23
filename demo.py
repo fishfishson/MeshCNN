@@ -26,4 +26,4 @@ dataloader = torch.utils.data.DataLoader(dataset,
 for i, data in enumerate(dataloader):
     if i == 0:
         break
-print(data[0]['image_patch'][0])
+print(data['img_patch'].shape)
