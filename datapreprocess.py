@@ -125,7 +125,7 @@ def surf_preprocess(root, task='Heart2'):
                                    temp_aligned_init_surf)
 
 
-def get_processed_list(root='', task='Heart'):
+def get_processed_list(root='', task='Heart2'):
     img_list = glob.glob(os.path.join(root, task, 'images', '*nii'))
     img_list.sort()
 
@@ -153,8 +153,8 @@ def get_processed_list(root='', task='Heart'):
     return img_list, gt_list, surf_list
 
 
-def split_list(root, num_surf, proj_data_dir):
-    img_list, gt_list, surf_list = get_processed_list(root)
+def split_list(root, task, num_surf, proj_data_dir):
+    img_list, gt_list, surf_list = get_processed_list(root, task)
     n = len(img_list)
     n_train = int(0.8 * n)
 
@@ -166,9 +166,6 @@ def split_list(root, num_surf, proj_data_dir):
     train_img = img_array[:n_train]
     train_gt = gt_array[:n_train]
     train_surf = surf_array[:n_train]
-    print(train_img)
-    print(train_gt)
-    print(train_surf)
 
     train_img = np.repeat(train_img, num_surf)
     train_gt = np.repeat(train_gt, num_surf)
@@ -215,7 +212,7 @@ def main():
     num_surf = 5
     # process_MSD(root, task, num_surf)
     # surf_preprocess(root, task)
-    split_list(root, num_surf, proj_data_dir)
+    split_list(root, task, num_surf, proj_data_dir)
 
 
 if __name__ == '__main__':
