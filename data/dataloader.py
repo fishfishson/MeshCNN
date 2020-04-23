@@ -167,8 +167,9 @@ class MSDSurfTrainDataset(BaseDataset):
         data = dict()
         data['mesh'] = mesh
         data['gt_vs'] = np.asarray(gt_surf.vertices)
-        data['vs'] = mesh.vs
-        data['edges'] = mesh.edges
+        data['vs'] = copy.deepcopy(mesh.vs)
+        data['edges'] = copy.deepcopy(mesh.edges)
+        data['ve'] = copy.deepcopy(mesh.ve)
         data['img_patch'] = img_patch
         data['mask_patch'] = mask_patch
         edge_features = mesh.extract_features()

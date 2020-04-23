@@ -1,4 +1,4 @@
-from models.mesh_classifier import RegresserModel
+from models.mesh_classifier import RegresserModel, SurfLoss
 from data.dataloader import MSDSurfTrainDataset
 from util.writer import Writer
 import time
@@ -8,18 +8,27 @@ import torch
 import torch.nn as nn
 from losses.loss import DiceWithCELoss
 import numpy as np
+from torch.optim import lr_scheduler
 
 
 # train
 def train(opt):
     dataset = MSDSurfTrainDataset(opt)
     dataloader = DataLoader(dataset)
+
     writer = Writer(opt)
 
     model = RegresserModel(opt)
 
     seg_criterion = DiceWithCELoss()
-    mesh_criterion = nn.MSELoss()
+    mesh_criterion = SurfLoss()
+
+    optimizer = torch.optim.Adam(model.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
+
+    def lambda_rule(epoch):
+        lr_l = 1.0 - max(0, epoch + 1 + opt.epoch_count - opt.niter) / float(opt.niter_decay + 1)
+        return lr_l
+    scheduler = lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda_rule)
 
     dataset_size = len(dataset)
     print('#training meshes = %d' % dataset_size)
@@ -37,30 +46,42 @@ def train(opt):
             total_steps += opt.batch_size
             epoch_iter += opt.batch_size
 
-            img_patch = torch.from_numpy(data['img_patch']).view(-1, 1, 128, 128, 64)
-            mask_patch = torch.from_numpy(data['mask_patch']).view(-1, 1, 128, 128, 64)
+            img_patch = torch.from_numpy(data['img_patch']).float().view(-1, 1, 128, 128, 64)
+            mask_patch = torch.from_numpy(data['mask_patch']).long().view(-1, 1, 128, 128, 64)
             vs = torch.from_numpy(data['vs'])
             meshes = data['mesh']
-            edges = torch.from_numpy(data['edge_features']).float()
+            edge_fs = torch.from_numpy(data['edge_features']).float()
+            gt_vs = torch.from_numpy(data['gt_vs']).float()
+            edges = torch.from_numpy(data['edges']).long()
+            ve = data['ve']
 
             img_patch = img_patch.cuda()
             mask_patch = mask_patch.cuda()
-            edges = edges.cuda()
-            out_mask, out_map, out_edges = model(img_patch, edges, meshes)
+            edge_fs = edge_fs.cuda()
+            out_mask, out_map, out_edges = model(img_patch, edge_fs, edges, meshes, vs)
 
             seg_loss = seg_criterion(out_mask, mask_patch)
-            mesh_loss = mesh_criterion(out_edges, vs)
+            mesh_loss = mesh_criterion(out_edges, gt_vs, vs, ve)
+            loss = 0.5 * seg_loss + mesh_loss
 
-            if total_steps % opt.print_freq == 0:
-                loss = mesh_model.loss
-                t = (time.time() - iter_start_time) / opt.batch_size
-                writer.print_current_losses(epoch, epoch_iter, loss, t, t_data)
-                writer.plot_loss(loss, epoch, epoch_iter, dataset_size)
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
 
-            if i % opt.save_latest_freq == 0:
-                print('saving the latest model (epoch %d, total_steps %d)' %
-                      (epoch, total_steps))
-                mesh_model.save_network('latest')
+        scheduler.step(epoch)
+        lr = optimizer.param_groups[0]['lr']
+        print('learning rate = %.7f' % lr)
+
+        if total_steps % opt.print_freq == 0:
+            loss = mesh_model.loss
+            t = (time.time() - iter_start_time) / opt.batch_size
+            writer.print_current_losses(epoch, epoch_iter, loss, t, t_data)
+            writer.plot_loss(loss, epoch, epoch_iter, dataset_size)
+
+        if i % opt.save_latest_freq == 0:
+            print('saving the latest model (epoch %d, total_steps %d)' %
+                  (epoch, total_steps))
+            mesh_model.save_network('latest')
 
             iter_data_time = time.time()
         if epoch % opt.save_epoch_freq == 0:
