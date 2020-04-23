@@ -140,7 +140,7 @@ class MSDSurfTrainDataset(BaseDataset):
         self.indices = np.vstack((128 * zz.flatten(), 128 * yy.flatten(), 64 * xx.flatten())).T
 
         self.get_mean_std()
-        opt.input_nc = self.ninput_channels
+        opt.input_nc = self.ninput_channels + opt.seg_inplanes * 2
 
     def patch(self, idx):
         img = nib.load(self.img_lst[idx]).get_fdata()

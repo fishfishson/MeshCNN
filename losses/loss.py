@@ -214,6 +214,7 @@ class MixLoss(nn.Module):
 
 class DiceWithCELoss(nn.Module):
     def __init__(self, weight=0.5):
+        super(DiceWithCELoss, self).__init__()
         self.w = weight
         self.dice_loss = DiceLoss()
         self.ce_loss = nn.CrossEntropyLoss(ignore_index=-1)
