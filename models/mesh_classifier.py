@@ -160,7 +160,7 @@ class RegresserModel(nn.Module):
 
     def forward(self, img_patch, edge_fs, edges, vs, mesh):
         out_mask, out_fmap = self.seg_net(img_patch)
-        fmap = unpatch(out_fmap, self.opt.batch_sizes)
+        fmap = unpatch(out_fmap, self.opt.batch_size)
         edge_fmaps = self.add_feature(edges, fmap, vs)
         edge_inputs = torch.cat([edge_fs, edge_fmaps], dim=1)
         edge_offsets = self.mesh_net(edge_inputs, mesh)
