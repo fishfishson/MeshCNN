@@ -337,7 +337,7 @@ class DAResNet3d(nn.Module):
     def __init__(self, opt):
         super(DAResNet3d, self).__init__()
         k = opt.seg_inplanes
-        classes = opt.nclassess
+        classes = opt.nclasses
 
         self.layer0 = nn.Sequential(OrderedDict([
             ('conv1', nn.Conv3d(1, k, kernel_size=3, stride=2, padding=1, bias=False)),
