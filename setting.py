@@ -38,7 +38,7 @@ def parse_opts():
 
     # general params
     parser.add_argument('--num_workers', default=4, type=int, help='# threads for loading data')
-    parser.add_argument('--gpu_ids', type=str, default='0,1', help='gpu ids: e.g. 0  0,1,2, 0,2. use -1 for CPU')
+    parser.add_argument('--gpu_ids', type=str, default='0', help='gpu ids: e.g. 0  0,1,2, 0,2. use -1 for CPU')
     parser.add_argument('--name', type=str, default='debug',
                         help='name of the experiment. It decides where to store samples and models')
     parser.add_argument('--resume_path', default='', type=str, help='Path for resume model.')
@@ -61,7 +61,7 @@ def parse_opts():
                         help='frequency of running test in training script')
     parser.add_argument('--continue_train', action='store_true',
                         help='continue training: load the latest model')
-    parser.add_argument('--nepoch', type=int, default=2)
+    parser.add_argument('--nepoch', type=int, default=20)
     parser.add_argument('--save_intervals', type=int, default=10)
     parser.add_argument('--save_dir', type=str, default='./datasets')
     parser.add_argument('--epoch_count', type=int, default=1,
