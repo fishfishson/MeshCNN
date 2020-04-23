@@ -112,6 +112,14 @@ def train(dataloader, model, optimizer, scheduler, total_epochs, save_interval, 
 
 if __name__ == '__main__':
     opt = parse_opts()
+
+    str_ids = opt.gpu_ids.split(',')
+    opt.gpu_ids = []
+    for str_id in str_ids:
+        idx = int(str_id)
+        if idx >= 0:
+            opt.gpu_ids.append(idx)
+
     torch.manual_seed(opt.seed)
 
     dataloader = DataLoader(opt)
